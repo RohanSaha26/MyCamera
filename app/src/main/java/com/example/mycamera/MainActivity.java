@@ -19,17 +19,24 @@ import android.media.ImageReader;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.util.Size;
 import android.util.SparseIntArray;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.SeekBar;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+
+import org.opencv.android.OpenCVLoader;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -41,11 +48,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
-import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
 
-    private Button btnCapture;
     private TextureView textureView;
 
     //Check state orientation of output image
@@ -57,19 +62,18 @@ public class MainActivity extends AppCompatActivity {
         ORIENTATIONS.append(Surface.ROTATION_270,180);
     }
 
-    private String cameraId;
     private CameraDevice cameraDevice;
     private CameraCaptureSession cameraCaptureSessions;
     private CaptureRequest.Builder captureRequestBuilder;
     private Size imageDimension;
-    private ImageReader imageReader;
-
     //Save to FILE
     private File file;
     private static final int REQUEST_CAMERA_PERMISSION = 200;
-    private boolean mFlashSupported;
     private Handler mBackgroundHandler;
     private HandlerThread mBackgroundThread;
+
+    private int isoVal;
+    private float focusVal;
 
     CameraDevice.StateCallback stateCallback = new CameraDevice.StateCallback() {
         @Override
@@ -91,25 +95,51 @@ public class MainActivity extends AppCompatActivity {
     };
 
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        SeekBar isoControl = (SeekBar) findViewById(R.id.isoControl);
+        isoControl.setMax(15000);
+        isoControl.setProgress(200);
+        isoControl.setMin(100);
+        TextView isoText = (TextView) findViewById(R.id.isoText);
+        TextView isoTitle = (TextView)findViewById(R.id.isotitle);
+
+        Button proBtn = (Button) findViewById(R.id.proBtn);
+        proBtn.setText("PRO");
+        proBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (proBtn.getText()=="PRO"){
+                    isoControl.setVisibility(View.VISIBLE);
+                    isoText.setVisibility(View.VISIBLE);
+                    isoTitle.setVisibility(View.VISIBLE);
+                    proBtn.setText("CLOSE");
+                }else {
+                    isoControl.setVisibility(View.INVISIBLE);
+                    isoText.setVisibility(View.INVISIBLE);
+                    isoTitle.setVisibility(View.INVISIBLE);
+                    proBtn.setText("PRO");
+                }
+        }});
 
         textureView = (TextureView)findViewById(R.id.imgView);
-        //From Java 1.4 , you can use keyword 'assert' to check expression true or false
         assert textureView != null;
         textureView.setSurfaceTextureListener(textureListener);
-        btnCapture = (Button)findViewById(R.id.captureBtn);
+        ImageView btnCapture = (ImageView) findViewById(R.id.captureBtn);
         btnCapture.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 takePicture();
             }
         });
+
     }
 
     private void takePicture() {
+
         if(cameraDevice == null)
             return;
         CameraManager manager = (CameraManager)getSystemService(Context.CAMERA_SERVICE);
@@ -151,6 +181,8 @@ public class MainActivity extends AppCompatActivity {
                         ByteBuffer buffer = image.getPlanes()[0].getBuffer();
                         byte[] bytes = new byte[buffer.capacity()];
                         buffer.get(bytes);
+//                        System.out.println(Arrays.toString(bytes));
+
                         save(bytes);
 
                     }
@@ -243,7 +275,22 @@ public class MainActivity extends AppCompatActivity {
     private void updatePreview() {
         if(cameraDevice == null)
             Toast.makeText(this, "Error", Toast.LENGTH_SHORT).show();
-        captureRequestBuilder.set(CaptureRequest.CONTROL_MODE,CaptureRequest.CONTROL_MODE_AUTO);
+//        captureRequestBuilder.set(CaptureRequest.CONTROL_MODE,CaptureRequest.CONTROL_MODE_AUTO);
+        //Control ISO,AF,WB,Shutter Speed here.
+//        captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,CaptureRequest.FLASH_MODE_SINGLE);
+//
+//        captureRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE,CaptureRequest.CONTROL_MODE_AUTO);
+//        captureRequestBuilder.set(CaptureRequest.LENS_FOCUS_DISTANCE,0.0f);                         //Auto Focus
+//
+//        captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE,CaptureRequest.CONTROL_AWB_MODE_AUTO);    //White Balance
+//        captureRequestBuilder.set(CaptureRequest.CONTROL_MODE,2000);
+//
+//        captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,CaptureRequest.CONTROL_AE_MODE_OFF);    // Auto Exposure
+//        captureRequestBuilder.set(CaptureRequest.CONTROL_MODE,CaptureRequest.CONTROL_MODE_OFF);
+
+//        captureRequestBuilder.set(CaptureRequest.SENSOR_SENSITIVITY,200);                           //ISO
+//        captureRequestBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME,117162276);
+
         try{
             cameraCaptureSessions.setRepeatingRequest(captureRequestBuilder.build(),null,mBackgroundHandler);
         } catch (CameraAccessException e) {
@@ -255,7 +302,7 @@ public class MainActivity extends AppCompatActivity {
     private void openCamera() {
         CameraManager manager = (CameraManager)getSystemService(Context.CAMERA_SERVICE);
         try{
-            cameraId = manager.getCameraIdList()[0];
+            String cameraId = manager.getCameraIdList()[0];
             CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraId);
             StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
             assert map != null;
@@ -300,10 +347,9 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if(requestCode == REQUEST_CAMERA_PERMISSION)
-        {
-            if(grantResults[0] != PackageManager.PERMISSION_GRANTED)
-            {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_CAMERA_PERMISSION) {
+            if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
                 Toast.makeText(this, "You can't use camera without permission", Toast.LENGTH_SHORT).show();
                 finish();
             }
