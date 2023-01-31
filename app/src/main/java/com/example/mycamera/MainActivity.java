@@ -42,6 +42,11 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.print.PrintHelper;
+
+import com.chaquo.python.PyObject;
+import com.chaquo.python.Python;
+import com.chaquo.python.android.AndroidPlatform;
 
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
@@ -88,6 +93,8 @@ public class MainActivity extends AppCompatActivity {
 
     private int isoVal;
     private float focusVal;
+
+    PrintHelper printHelper = new PrintHelper(this);
 
     CameraDevice.StateCallback stateCallback = new CameraDevice.StateCallback() {
         @Override
@@ -139,6 +146,10 @@ public class MainActivity extends AppCompatActivity {
                 }
         }});
 
+        if(!Python.isStarted()) {
+            Python.start(new AndroidPlatform((this)));
+        }
+
         textureView = (TextureView)findViewById(R.id.imgView);
         assert textureView != null;
         textureView.setSurfaceTextureListener(textureListener);
@@ -149,6 +160,7 @@ public class MainActivity extends AppCompatActivity {
                 takePicture();
             }
         });
+
 
     }
 
@@ -185,7 +197,7 @@ public class MainActivity extends AppCompatActivity {
             int rotation = getWindowManager().getDefaultDisplay().getRotation();
             captureBuilder.set(CaptureRequest.JPEG_ORIENTATION,ORIENTATIONS.get(rotation));
             long timestamp = Calendar.getInstance().getTimeInMillis();
-            file = new File(Environment.getExternalStorageDirectory()+"/DCIM/MYCAM-"+timestamp+".jpg");
+            file = new File(Environment.getExternalStorageDirectory()+"/DCIM/Camera/MYCAM-"+timestamp+".jpg");
             ImageReader.OnImageAvailableListener readerListener = new ImageReader.OnImageAvailableListener() {
                 @Override
                 public void onImageAvailable(ImageReader imageReader) {
@@ -195,8 +207,10 @@ public class MainActivity extends AppCompatActivity {
                         ByteBuffer buffer = image.getPlanes()[0].getBuffer();
                         byte[] bytes = new byte[buffer.capacity()];
                         buffer.get(bytes);
-                        System.out.println(Arrays.toString(bytes));
-
+//                        System.out.println(image.getHeight());
+//                        System.out.println(image.getWidth());
+//                        System.out.println(Arrays.toString(bytes));
+//                      bytes = imageProcessed(bytes);
                         Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
 //                        Mat mat = new Mat();
 //                        Utils.bitmapToMat(bitmap,mat);
@@ -211,21 +225,23 @@ public class MainActivity extends AppCompatActivity {
 //                        System.out.println(bitmap.);
                         System.out.println("+++++++++++++++");
 //                        Mat mat = Imgcodecs.imdecode(new MatOfByte(bytes), Imgcodecs.);
-//                        Mat mat = Imgcodecs.imdecode(new MatOfByte(bytes), Imgcodecs.CV_LOAD_IMAGE_UNCHANGED);
+//                        Mat mat = Imgcodecs.imdecode(new MatOfByte(bytes), Imgcodecs.);
 
-                        save(bytes);
-//                        saveImage(bitmap);
+//                        save(bytes);
 
-                    }
-                    catch (FileNotFoundException e)
-                    {
-                        e.printStackTrace();
-                    }
-                    catch (IOException e)
-                    {
-                        e.printStackTrace();
-                    }
-                    finally {
+//                        Python py = Python.getInstance();
+//                        PyObject pyScript = py.getModule("pyScript");
+//                        PyObject imageNegative = pyScript.callAttr("imageNegative",bitmap);
+//                        System.out.println(imageNegative.toString());
+//                        System.out.println(bitmap);
+
+//                        // Set the desired scale mode.
+//                        printHelper.setScaleMode(PrintHelper.SCALE_MODE_FIT);
+//                        // Print the bitmap.
+//                        printHelper.printBitmap("Print Bitmap", bitmap);
+                        saveImage(bitmap);
+
+                    } finally {
                         {
                             if(image != null)
                                 image.close();
@@ -233,27 +249,24 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
 
-//                private void saveImage(Bitmap bitmap) {
-//                    OutputStream fos;
-//                    try {
-//                        if(Build.VERSION.SDK_INT>= Build.VERSION_CODES.Q){
-//                            ContentResolver resolver = getContentResolver();
-//                            ContentValues contentValues = new ContentValues();
-//                            contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME,"Image"+".jpg");
-//                            contentValues.put(MediaStore.MediaColumns.MIME_TYPE,"image/jpg");
-//                            Uri uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,contentValues);
-//                            fos = resolver.openOutputStream(Objects.requireNonNull(uri));
-//                            bitmap.compress(Bitmap.CompressFormat.JPEG,100,fos);
-//                            Objects.requireNonNull(fos);
-//                        }
-//                    }catch (Exception e){
-//
-//                    }
-//                }
+                private void saveImage(Bitmap bitmap) {
+                    OutputStream fos;
+                    try {
+
+//                        File path = new File(Environment.getExternalStorageDirectory() + "/DCIM/Camera/MYCAM-bitmap-" + timestamp + ".jpg");
+
+                        fos = new FileOutputStream(file);
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);
+
+                    } catch (FileNotFoundException ex) {
+                        ex.printStackTrace();
+                    }
+                }
 
                 private void save(byte[] bytes) throws IOException {
                     OutputStream outputStream = null;
                     try{
+
                         outputStream = new FileOutputStream(file);
                         outputStream.write(bytes);
                     }finally {
@@ -325,7 +338,7 @@ public class MainActivity extends AppCompatActivity {
     private void updatePreview() {
         if(cameraDevice == null)
             Toast.makeText(this, "Error", Toast.LENGTH_SHORT).show();
-//        captureRequestBuilder.set(CaptureRequest.CONTROL_MODE,CaptureRequest.CONTROL_MODE_AUTO);
+        captureRequestBuilder.set(CaptureRequest.CONTROL_MODE,CaptureRequest.CONTROL_MODE_AUTO);
         //Control ISO,AF,WB,Shutter Speed here.
 //        captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,CaptureRequest.FLASH_MODE_SINGLE);
 //

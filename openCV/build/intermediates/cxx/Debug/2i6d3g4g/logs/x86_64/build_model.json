@@ -25,6 +25,9 @@
     "variantName": "debug",
     "isDebuggableEnabled": true,
     "validAbiList": [
+      "ARMEABI_V7A",
+      "ARM64_V8A",
+      "X86",
       "X86_64"
     ],
     "buildTargetSet": [
@@ -126,7 +129,6 @@
         "rootBuildGradleFolder": "S:\\Android Projects\\MyCamera",
         "sdkFolder": "C:\\Users\\rsroh\\AppData\\Local\\Android\\Sdk",
         "isBuildOnlyTargetAbiEnabled": true,
-        "ideBuildTargetAbi": "x86_64",
         "isCmakeBuildCohabitationEnabled": false,
         "isPrefabEnabled": false
       },
