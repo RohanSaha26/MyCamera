@@ -130,21 +130,21 @@ public class MainActivity extends AppCompatActivity {
 
         Button proBtn = (Button) findViewById(R.id.proBtn);
         proBtn.setText("PRO");
-        proBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (proBtn.getText()=="PRO"){
-                    isoControl.setVisibility(View.VISIBLE);
-                    isoText.setVisibility(View.VISIBLE);
-                    isoTitle.setVisibility(View.VISIBLE);
-                    proBtn.setText("CLOSE");
-                }else {
-                    isoControl.setVisibility(View.INVISIBLE);
-                    isoText.setVisibility(View.INVISIBLE);
-                    isoTitle.setVisibility(View.INVISIBLE);
-                    proBtn.setText("PRO");
-                }
-        }});
+//        proBtn.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                if (proBtn.getText()=="PRO"){
+//                    isoControl.setVisibility(View.VISIBLE);
+//                    isoText.setVisibility(View.VISIBLE);
+//                    isoTitle.setVisibility(View.VISIBLE);
+//                    proBtn.setText("CLOSE");
+//                }else {
+//                    isoControl.setVisibility(View.INVISIBLE);
+//                    isoText.setVisibility(View.INVISIBLE);
+//                    isoTitle.setVisibility(View.INVISIBLE);
+//                    proBtn.setText("PRO");
+//                }
+//        }});
 
         if(!Python.isStarted()) {
             Python.start(new AndroidPlatform((this)));
@@ -207,9 +207,14 @@ public class MainActivity extends AppCompatActivity {
                         ByteBuffer buffer = image.getPlanes()[0].getBuffer();
                         byte[] bytes = new byte[buffer.capacity()];
                         buffer.get(bytes);
-//                        System.out.println(image.getHeight());
-//                        System.out.println(image.getWidth());
-//                        System.out.println(Arrays.toString(bytes));
+                        System.out.println(image.getHeight()); //3840
+                        System.out.println(image.getWidth()); //2160
+//                        System.out.println(Arrays.toString(new byte[]{bytes[10]}));
+//                        System.out.println(Arrays.toString(new byte[]{bytes[5]}));
+
+                        System.out.println(Arrays.toString(bytes));
+                        System.out.println(image);
+                        System.out.println(bytes.length); //4369657
 //                      bytes = imageProcessed(bytes);
                         Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
 //                        Mat mat = new Mat();
@@ -229,18 +234,24 @@ public class MainActivity extends AppCompatActivity {
 
 //                        save(bytes);
 
-//                        Python py = Python.getInstance();
-//                        PyObject pyScript = py.getModule("pyScript");
-//                        PyObject imageNegative = pyScript.callAttr("imageNegative",bitmap);
-//                        System.out.println(imageNegative.toString());
+                        Python py = Python.getInstance();
+                        PyObject pyScript = py.getModule("pyScript");
+                        PyObject imageSize = pyScript.callAttr("imageSize",image.getHeight(),image.getWidth());
+                        System.out.println("---------------");
+                        System.out.println(imageSize.toString());
+                        System.out.println("---------------");
+//                        System.out.println(Arrays.toString(bytes));
 //                        System.out.println(bitmap);
 
 //                        // Set the desired scale mode.
 //                        printHelper.setScaleMode(PrintHelper.SCALE_MODE_FIT);
 //                        // Print the bitmap.
 //                        printHelper.printBitmap("Print Bitmap", bitmap);
-                        saveImage(bitmap);
+//                        saveImage(bitmap);
+                        save(bytes);
 
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     } finally {
                         {
                             if(image != null)
@@ -370,7 +381,6 @@ public class MainActivity extends AppCompatActivity {
             StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
             assert map != null;
             imageDimension = map.getOutputSizes(SurfaceTexture.class)[0];
-            //Check realtime permission if run higher API 23
             if(ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED)
             {
                 ActivityCompat.requestPermissions(this,new String[]{

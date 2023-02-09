@@ -1,5 +1,5 @@
 #create function
-import numpy as np
+# import numpy as np
 def hello():
     return "Hello from python"
 
@@ -8,3 +8,10 @@ def returnArr(n):
 
 def imageNegative(bitmap):
     return bitmap
+
+def byteArrReturn(bytes):
+    return bytes[10]
+
+def imageSize(height,width):
+    arr = [height,width]
+    return arr
