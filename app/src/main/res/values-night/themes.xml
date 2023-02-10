@@ -1,10 +1,13 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
-    <style name="Theme.MyCamera" parent="Theme.AppCompat.Light.DarkActionBar">
+    <style name="Theme.MyCamera" parent="Theme.Material3.DynamicColors.DayNight">
         <!-- Primary brand color. -->
-        <item name="colorPrimary">@color/purple_200</item>
-        <item name="colorPrimaryDark">@color/purple_700</item>
+
+        <item name="colorPrimary">#FFFFFF</item>
+        <item name="colorPrimaryDark">#000000</item>
         <item name="colorAccent">@color/teal_200</item>
+        <item name="android:windowActionBar">true</item>
+        <item name="android:windowNoTitle">true</item>
         <!-- Customize your theme here. -->
     </style>
 </resources>

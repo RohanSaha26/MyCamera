@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -47,6 +48,7 @@ import androidx.print.PrintHelper;
 import com.chaquo.python.PyObject;
 import com.chaquo.python.Python;
 import com.chaquo.python.android.AndroidPlatform;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
@@ -121,13 +123,13 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        SeekBar isoControl = (SeekBar) findViewById(R.id.isoControl);
-        isoControl.setMax(15000);
-        isoControl.setProgress(200);
-        isoControl.setMin(100);
+//        SeekBar isoControl = (SeekBar) findViewById(R.id.isoControl);
+//        isoControl.setMax(15000);
+//        isoControl.setProgress(200);
+//        isoControl.setMin(100);
         TextView isoText = (TextView) findViewById(R.id.isoText);
         TextView isoTitle = (TextView)findViewById(R.id.isotitle);
-
+        Button galleryBtn = (Button)findViewById(R.id.galleryBtn);
         Button proBtn = (Button) findViewById(R.id.proBtn);
         proBtn.setText("PRO");
 //        proBtn.setOnClickListener(new View.OnClickListener() {
@@ -146,6 +148,13 @@ public class MainActivity extends AppCompatActivity {
 //                }
 //        }});
 
+        galleryBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent gallery = new Intent(MainActivity.this,GalleryActivity.class);
+                startActivity(gallery);
+            }
+        });
         if(!Python.isStarted()) {
             Python.start(new AndroidPlatform((this)));
         }
@@ -153,7 +162,7 @@ public class MainActivity extends AppCompatActivity {
         textureView = (TextureView)findViewById(R.id.imgView);
         assert textureView != null;
         textureView.setSurfaceTextureListener(textureListener);
-        ImageView btnCapture = (ImageView) findViewById(R.id.captureBtn);
+        FloatingActionButton btnCapture = (FloatingActionButton) findViewById(R.id.captureBtn);
         btnCapture.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -163,7 +172,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
-
+//pass raw arguments by this function
     private void takePicture() {
 
         if(cameraDevice == null)
@@ -207,16 +216,16 @@ public class MainActivity extends AppCompatActivity {
                         ByteBuffer buffer = image.getPlanes()[0].getBuffer();
                         byte[] bytes = new byte[buffer.capacity()];
                         buffer.get(bytes);
-                        System.out.println(image.getHeight()); //3840
-                        System.out.println(image.getWidth()); //2160
+//                        System.out.println(image.getHeight()); //3840
+//                        System.out.println(image.getWidth()); //2160
 //                        System.out.println(Arrays.toString(new byte[]{bytes[10]}));
 //                        System.out.println(Arrays.toString(new byte[]{bytes[5]}));
 
-                        System.out.println(Arrays.toString(bytes));
-                        System.out.println(image);
-                        System.out.println(bytes.length); //4369657
+//                        System.out.println(Arrays.toString(bytes));
+//                        System.out.println(image);
+//                        System.out.println(bytes.length); //4369657
 //                      bytes = imageProcessed(bytes);
-                        Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+//                        Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
 //                        Mat mat = new Mat();
 //                        Utils.bitmapToMat(bitmap,mat);
 //                        Imgproc.cvtColor(mat,mat,Imgproc.COLOR_RGB2GRAY);
@@ -224,22 +233,22 @@ public class MainActivity extends AppCompatActivity {
 //                        ByteArrayOutputStream stream = new ByteArrayOutputStream();
 //                        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
 //                        byte[] byteArray = stream.toByteArray();
-                        System.out.println("+++++++++++++++");
-                        System.out.println(bitmap.getHeight());
-                        System.out.println(bitmap.getWidth());
-//                        System.out.println(bitmap.);
-                        System.out.println("+++++++++++++++");
+//                        System.out.println("+++++++++++++++");
+//                        System.out.println(bitmap.getHeight());
+//                        System.out.println(bitmap.getWidth());
+////                        System.out.println(bitmap.);
+//                        System.out.println("+++++++++++++++");
 //                        Mat mat = Imgcodecs.imdecode(new MatOfByte(bytes), Imgcodecs.);
 //                        Mat mat = Imgcodecs.imdecode(new MatOfByte(bytes), Imgcodecs.);
 
 //                        save(bytes);
 
-                        Python py = Python.getInstance();
-                        PyObject pyScript = py.getModule("pyScript");
-                        PyObject imageSize = pyScript.callAttr("imageSize",image.getHeight(),image.getWidth());
-                        System.out.println("---------------");
-                        System.out.println(imageSize.toString());
-                        System.out.println("---------------");
+//                        Python py = Python.getInstance();
+//                        PyObject pyScript = py.getModule("pyScript");
+//                        PyObject imageSize = pyScript.callAttr("imageSize",image.getHeight(),image.getWidth());
+//                        System.out.println("---------------");
+//                        System.out.println(imageSize.toString());
+//                        System.out.println("---------------");
 //                        System.out.println(Arrays.toString(bytes));
 //                        System.out.println(bitmap);
 
@@ -292,7 +301,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onCaptureCompleted(@NonNull CameraCaptureSession session, @NonNull CaptureRequest request, @NonNull TotalCaptureResult result) {
                     super.onCaptureCompleted(session, request, result);
-                    Toast.makeText(MainActivity.this, "Saved "+file, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "Image Saved", Toast.LENGTH_SHORT).show();
                     createCameraPreview();
                 }
             };

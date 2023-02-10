@@ -17,19 +17,31 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.0" />
 
-    <ImageView
-        android:id="@+id/captureBtn"
-        android:layout_width="64dp"
-        android:layout_height="66dp"
-        android:layout_alignParentBottom="true"
-        android:background="@drawable/ic_baseline_photo_camera_24"
-        android:textColor="@color/white"
-        app:layout_constraintBottom_toBottomOf="parent"
+<!--    <ImageView-->
+<!--        android:id="@+id/captureBtn"-->
+<!--        android:layout_width="64dp"-->
+<!--        android:layout_height="66dp"-->
+<!--        android:layout_alignParentBottom="true"-->
+<!--        android:background="@drawable/ic_baseline_photo_camera_24"-->
+<!--        android:textColor="@color/white"-->
+<!--        app:layout_constraintBottom_toBottomOf="parent"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintHorizontal_bias="0.498"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintTop_toTopOf="@+id/imgView"-->
+<!--        app:layout_constraintVertical_bias="0.934" />-->
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@id/captureBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="@+id/imgView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/imgView"
-        app:layout_constraintVertical_bias="0.934" />
+        app:layout_constraintTop_toBottomOf="@+id/focusControl"
+        app:layout_constraintVertical_bias="0.381"
+        app:srcCompat="@drawable/camera" />
 
     <SeekBar
         android:id="@+id/isoControl"
@@ -126,5 +138,15 @@
         app:layout_constraintStart_toEndOf="@+id/focusControl"
         app:layout_constraintTop_toTopOf="@+id/focusControl"
         app:layout_constraintVertical_bias="1.0" />
+
+    <Button
+        android:id="@+id/galleryBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Gallery"
+        app:layout_constraintBottom_toBottomOf="@+id/captureBtn"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/captureBtn"
+        app:layout_constraintTop_toTopOf="@+id/captureBtn" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
