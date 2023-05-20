@@ -3,13 +3,8 @@
 //
 package org.opencv.core;
 
-import java.util.ArrayList;
 import java.util.List;
-import org.opencv.core.Mat;
-import org.opencv.core.MatOfDouble;
-import org.opencv.core.MatOfInt;
-import org.opencv.core.Scalar;
-import org.opencv.core.TermCriteria;
+
 import org.opencv.utils.Converters;
 
 // C++: class Core
@@ -760,11 +755,9 @@ public class Core {
      * @param src1 first input array or a scalar.
      * @param src2 second input array or a scalar.
      * @param dst output array of the same size and the same number of channels as the input array.
-     * of the output array to be changed.
-     * SEE:  add, addWeighted, scaleAdd, Mat::convertTo
+ * of the output array to be changed.
      */
-    public static void subtract(Mat src1, Mat src2, Mat dst) {
-        subtract_2(src1.nativeObj, src2.nativeObj, dst.nativeObj);
+    public static void subtract(Scalar src1, Mat src2, Mat dst) {
     }
 
 

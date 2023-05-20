@@ -17,31 +17,17 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.0" />
 
-<!--    <ImageView-->
-<!--        android:id="@+id/captureBtn"-->
-<!--        android:layout_width="64dp"-->
-<!--        android:layout_height="66dp"-->
-<!--        android:layout_alignParentBottom="true"-->
-<!--        android:background="@drawable/ic_baseline_photo_camera_24"-->
-<!--        android:textColor="@color/white"-->
-<!--        app:layout_constraintBottom_toBottomOf="parent"-->
-<!--        app:layout_constraintEnd_toEndOf="parent"-->
-<!--        app:layout_constraintHorizontal_bias="0.498"-->
-<!--        app:layout_constraintStart_toStartOf="parent"-->
-<!--        app:layout_constraintTop_toTopOf="@+id/imgView"-->
-<!--        app:layout_constraintVertical_bias="0.934" />-->
-
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@id/captureBtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintBottom_toBottomOf="@+id/imgView"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/focusControl"
-        app:layout_constraintVertical_bias="0.381"
-        app:srcCompat="@drawable/camera" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.935"
+        app:srcCompat="@drawable/ic_baseline_photo_camera_24" />
 
     <SeekBar
         android:id="@+id/isoControl"
@@ -61,9 +47,9 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="1dp"
         android:text="100"
-        android:visibility="gone"
         android:textColor="@color/white"
         android:textSize="15dp"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@+id/isoControl"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.175"
@@ -77,9 +63,9 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="2dp"
         android:text="ISO"
-        android:visibility="gone"
         android:textColor="@color/white"
         android:textStyle="bold"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@+id/isoControl"
         app:layout_constraintEnd_toStartOf="@+id/isoControl"
         app:layout_constraintStart_toStartOf="parent"
@@ -99,12 +85,12 @@
         app:layout_constraintStart_toEndOf="@+id/captureBtn"
         app:layout_constraintTop_toTopOf="@+id/captureBtn" />
 
-        <SeekBar
+    <SeekBar
         android:id="@+id/focusControl"
         android:layout_width="275dp"
         android:layout_height="21dp"
+        android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@+id/captureBtn"
-            android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="@+id/imgView"
         app:layout_constraintTop_toTopOf="parent"
@@ -148,5 +134,16 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/captureBtn"
         app:layout_constraintTop_toTopOf="@+id/captureBtn" />
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="45dp"
+        android:layout_height="45dp"
+        app:layout_constraintBottom_toBottomOf="@+id/imgView"
+        app:layout_constraintEnd_toEndOf="@+id/imgView"
+        app:layout_constraintStart_toStartOf="@+id/imgView"
+        app:layout_constraintTop_toTopOf="@+id/imgView"
+        android:visibility="invisible"/>
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

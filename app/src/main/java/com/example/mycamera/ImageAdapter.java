@@ -1,7 +1,9 @@
 // package com.android.myapplication;
 package com.example.mycamera;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,15 +15,16 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 
+import java.io.File;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ViewHolder> {
-    ArrayList<Image> arrayList;
+    ArrayList<File> arrayList;
     Context context;
     OnItemClickListener onItemClickListener;
 
-    public ImageAdapter(Context context, ArrayList<com.example.mycamera.Image> arrayList) {
+    public ImageAdapter(Context context, ArrayList<File> arrayList) {
         this.arrayList = arrayList;
         this.context = context;
     }
@@ -34,11 +37,42 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ViewHolder> 
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        holder.title.setText(arrayList.get(position).getTitle());
-        holder.size.setText(getSize(arrayList.get(position).getSize()));
-        Glide.with(context).load(arrayList.get(position).getPath()).placeholder(R.drawable.ic_baseline_broken_image_24).into(holder.imageView);
-        holder.itemView.setOnClickListener(v -> onItemClickListener.onClick(v, arrayList.get(position).getPath()));
+    public void onBindViewHolder(@NonNull ViewHolder holder, @SuppressLint("RecyclerView") int position) {
+
+        String title = arrayList.get(position).getName();
+        String path = arrayList.get(position).getPath();
+
+        if(arrayList.get(position).isDirectory()){
+            holder.title.setText(title);
+            holder.size.setText("Folder");
+            holder.imageView.setImageResource(R.drawable.folder);
+            holder.itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(context,GalleryActivity.class);
+                   String rootPath = arrayList.get(position).getPath();
+                   intent.putExtra("rootPath",rootPath);
+                   intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                   context.startActivity(intent);
+                }
+            });
+        }else {
+            holder.title.setText(title);
+            holder.size.setText(getSize(arrayList.get(position).length()));
+            Glide.with(context).load(path).placeholder(R.drawable.ic_baseline_broken_image_24).into(holder.imageView);
+            holder.itemView.setOnClickListener(v -> onItemClickListener.onClick(v, arrayList.get(position).getPath()));
+        }
+
+//        holder.itemView.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                Intent intent = new Intent("com.google.android.apps.photos");
+//                intent.setAction(Intent.ACTION_VIEW);
+//                intent.setDataAndType(Uri.parse(arrayList.get(position).getPath()), "image/jpg");
+//                context.startActivity(intent);
+////                context.startActivity(Intent.createChooser(intent, "Open image using"));
+//            }
+//        });
     }
 
     @Override

@@ -9,70 +9,29 @@
     tools:layout_editor_absoluteY="411dp">
 
     <ImageView
-        android:id="@+id/img2"
-        android:layout_width="228dp"
-        android:layout_height="283dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.496"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.816"
-        tools:srcCompat="@tools:sample/avatars" />
-
-    <ImageView
         android:id="@+id/img1"
-        android:layout_width="228dp"
-        android:layout_height="283dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_width="278dp"
+        android:layout_height="560dp"
+        app:layout_constraintBottom_toTopOf="@+id/save"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.496"
+        app:layout_constraintHorizontal_bias="0.495"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.029"
+        app:layout_constraintVertical_bias="0.865"
         tools:srcCompat="@tools:sample/avatars" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/save"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
         android:clickable="true"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.753"
+        app:layout_constraintHorizontal_bias="0.821"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/img2"
-        app:layout_constraintVertical_bias="0.948"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.984"
         app:srcCompat="@drawable/save" />
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/done"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:clickable="true"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/save"
-        app:layout_constraintHorizontal_bias="0.852"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/img2"
-        app:layout_constraintVertical_bias="0.964"
-        app:srcCompat="@drawable/done" />
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/previous"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:clickable="true"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/done"
-        app:layout_constraintHorizontal_bias="0.732"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/img2"
-        app:layout_constraintVertical_bias="0.964"
-        app:srcCompat="@drawable/prev" />
 
     <Button
         android:id="@+id/applyAlgo"
@@ -82,41 +41,41 @@
         android:text="Apply"
         app:layout_constraintBottom_toBottomOf="@+id/dropdown"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.934"
+        app:layout_constraintHorizontal_bias="0.947"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/dropdown"
         app:layout_constraintVertical_bias="0.0" />
 
     <Spinner
         android:id="@+id/dropdown"
-        android:layout_width="170dp"
-        android:layout_height="41dp"
+        android:layout_width="231dp"
+        android:layout_height="46dp"
         android:layout_marginLeft="10dp"
         android:background="@drawable/bg_rounded"
-        app:layout_constraintBottom_toTopOf="@+id/img2"
+        app:layout_constraintBottom_toTopOf="@+id/img1"
         app:layout_constraintEnd_toStartOf="@+id/applyAlgo"
-        app:layout_constraintHorizontal_bias="0.064"
+        app:layout_constraintHorizontal_bias="0.302"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/img1"
-        app:layout_constraintVertical_bias="0.226" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <SeekBar
         android:id="@+id/bar"
         style="@style/Widget.AppCompat.SeekBar"
         android:layout_width="300dp"
         android:layout_height="20dp"
+        android:layout_marginTop="20dp"
         android:layout_marginRight="10dp"
         android:max="100"
         android:progress="50"
         android:progressTint="@color/blue"
         android:thumb="@drawable/edit"
         android:thumbTint="@color/blue"
-        app:layout_constraintBottom_toTopOf="@+id/img2"
+        app:layout_constraintBottom_toTopOf="@+id/img1"
         app:layout_constraintEnd_toEndOf="@+id/applyAlgo"
-        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintHorizontal_bias="0.326"
         app:layout_constraintStart_toStartOf="@+id/dropdown"
         app:layout_constraintTop_toBottomOf="@+id/dropdown"
-        app:layout_constraintVertical_bias="0.416" />
+        app:layout_constraintVertical_bias="0.0" />
 
     <TextView
         android:id="@+id/seekValue"
@@ -125,10 +84,52 @@
         android:text="50"
         android:layout_marginLeft="2dp"
         android:layout_marginRight="10dp"
-        android:textSize="13dp"
+        android:textSize="14dp"
         app:layout_constraintBottom_toBottomOf="@+id/bar"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toEndOf="@+id/bar"
         app:layout_constraintTop_toTopOf="@+id/bar" />
+
+    <ImageView
+        android:id="@+id/change"
+        android:layout_width="40dp"
+        android:layout_height="39dp"
+        app:layout_constraintBottom_toTopOf="@+id/save"
+        app:layout_constraintEnd_toStartOf="@+id/save"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="@+id/img1"
+        app:layout_constraintTop_toBottomOf="@+id/img1"
+        app:layout_constraintVertical_bias="0.181"
+        app:srcCompat="@drawable/change" />
+
+    <com.airbnb.lottie.LottieAnimationView
+        android:id="@+id/load"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:visibility="visible"
+        app:layout_constraintBottom_toTopOf="@+id/img1"
+        app:layout_constraintEnd_toEndOf="@+id/img1"
+        app:layout_constraintHorizontal_bias="0.502"
+        app:layout_constraintStart_toStartOf="@+id/img1"
+        app:layout_constraintTop_toBottomOf="@+id/bar"
+        app:layout_constraintVertical_bias="0.496"
+        app:lottie_autoPlay="true"
+        app:lottie_loop="true"
+        app:lottie_rawRes="@raw/loading"
+        tools:ignore="MissingConstraints" />
+
+    <TextView
+        android:id="@+id/imgStatusName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Original"
+        android:textSize="15dp"
+        android:layout_marginBottom="5dp"
+        app:layout_constraintBottom_toBottomOf="@+id/change"
+        app:layout_constraintEnd_toStartOf="@+id/save"
+        app:layout_constraintHorizontal_bias="0.141"
+        app:layout_constraintStart_toEndOf="@+id/change"
+        app:layout_constraintTop_toTopOf="@+id/change"
+        app:layout_constraintVertical_bias="0.8" />
 </androidx.constraintlayout.widget.ConstraintLayout>

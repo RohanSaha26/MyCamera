@@ -1,9 +1,4 @@
-// package com.android.myapplication;
 package com.example.mycamera;
-
-
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ShareCompat;
 
 import android.content.ContentResolver;
 import android.content.ContentUris;
@@ -16,12 +11,15 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ShareCompat;
+
 import com.bumptech.glide.Glide;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.ortiz.touchview.TouchImageView;
 
 import java.io.File;
 
@@ -32,11 +30,13 @@ public class ImageViewerActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_image_viewer);
         String path = null;
-        ImageView imageView = findViewById(R.id.imageView);
+        TouchImageView imageView = findViewById(R.id.imageView);
         Intent intent = getIntent();
         if (intent != null) {
-            Glide.with(ImageViewerActivity.this).load(intent.getStringExtra("image")).placeholder(R.drawable.ic_baseline_broken_image_24).into(imageView);
+//            ArrayList<File> files = (ArrayList<File>) intent.getSerializableExtra("files");
             path = intent.getStringExtra("image");
+            Glide.with(ImageViewerActivity.this).load(path).placeholder(R.drawable.ic_baseline_broken_image_24).into(imageView);
+
         }
 
         Button share = findViewById(R.id.shareImage);
@@ -48,7 +48,7 @@ public class ImageViewerActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 MaterialAlertDialogBuilder alertDialogBuilder = new MaterialAlertDialogBuilder(ImageViewerActivity.this);
-                alertDialogBuilder.setMessage("Do you want to delete this image ?");
+                alertDialogBuilder.setMessage("Are you sure you want to delete this image ?");
                 alertDialogBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -69,12 +69,11 @@ public class ImageViewerActivity extends AppCompatActivity {
                                 finish();
                             } catch (Exception e) {
                                 e.printStackTrace();
-                                Toast.makeText(ImageViewerActivity.this, "Error Deleting Video", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(ImageViewerActivity.this, "Deleting Error", Toast.LENGTH_SHORT).show();
                             }
                         } else {
-                            Toast.makeText(ImageViewerActivity.this, "File Not Find", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(ImageViewerActivity.this, "File Not Found", Toast.LENGTH_SHORT).show();
                         }
-                        cursor.close();
                     }
                 });
                 alertDialogBuilder.setNegativeButton("No", new DialogInterface.OnClickListener() {
@@ -84,7 +83,15 @@ public class ImageViewerActivity extends AppCompatActivity {
                     }
                 });
                 alertDialogBuilder.show();
+
             }
+        });
+
+        findViewById(R.id.edit).setOnClickListener(v -> {
+            Intent imgEdit = new Intent(ImageViewerActivity.this,ImageEdit.class)
+//                    .putExtra("rootPath",pathF+"/")
+                    .putExtra("imagePath",finalPath);
+            startActivity(imgEdit);
         });
     }
 }
