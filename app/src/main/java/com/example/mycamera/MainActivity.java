@@ -173,6 +173,11 @@ public class MainActivity extends AppCompatActivity {
             startActivity(gallery);
         });
 
+        if (!OpenCVLoader.initDebug()) {
+            Log.e("OpenCV", "Unable to load OpenCV");
+        } else {
+            Log.d("OpenCV", "OpenCV loaded successfully");
+        }
         textureView = (TextureView)findViewById(R.id.imgView);
         assert textureView != null;
         textureView.setSurfaceTextureListener(textureListener);
