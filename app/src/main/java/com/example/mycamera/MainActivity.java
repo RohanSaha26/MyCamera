@@ -4,10 +4,13 @@ import static org.opencv.core.CvType.CV_32F;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -15,6 +18,7 @@ import android.graphics.Color;
 import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
 import android.graphics.ImageFormat;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
@@ -28,10 +32,12 @@ import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.Image;
 import android.media.ImageReader;
+import android.net.Uri;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.util.Size;
 import android.util.SparseIntArray;
@@ -40,6 +46,7 @@ import android.view.TextureView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.ImageView;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -81,6 +88,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 
+
 public class MainActivity extends AppCompatActivity {
 
     private TextureView textureView;
@@ -108,9 +116,7 @@ public class MainActivity extends AppCompatActivity {
     private int isoVal;
     private float focusVal;
     public Bitmap bitmap,bitmap1;
-//    public byte[] bytes;
-//    public long timestamp;
-    int[][] pgmArray,redArray,greenArray,blueArray,pgmArrayNegative;
+    int camFlip; //1 - back , 0 - front
 
     PrintHelper printHelper = new PrintHelper(this);
 
@@ -138,17 +144,29 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Button galleryBtn = (Button)findViewById(R.id.galleryBtn);
+        ImageView cameraChangeBtn = (ImageView)findViewById(R.id.cameraChange);
+        findViewById(R.id.progressBar).setVisibility(View.INVISIBLE);
 
         File folder = new File(pathF);
         if (!folder.exists()) {
             folder.mkdir();
         }
 
-        if (!OpenCVLoader.initDebug()) {
-            Log.e("OpenCV", "Unable to load OpenCV");
-        } else {
-            Log.d("OpenCV", "OpenCV loaded successfully");
-        }
+
+//        camFlip = 1;
+        cameraChangeBtn.setOnClickListener(v -> {
+            Intent camChange;
+            if(camFlip == 1)
+                 camChange  = new Intent(MainActivity.this,MainActivity.class).putExtra("flip",0);
+            else
+                 camChange  = new Intent(MainActivity.this,MainActivity.class).putExtra("flip",1);
+            startActivity(camChange);
+            overridePendingTransition(R.anim.flip_in, R.anim.flip_out);
+            finish();
+
+
+        });
+        camFlip = getIntent().getIntExtra("flip",1);
 
         galleryBtn.setOnClickListener(v -> {
             Intent gallery = new Intent(MainActivity.this,GalleryActivity.class).putExtra("rootPath",pathF+"/");
@@ -167,7 +185,7 @@ public class MainActivity extends AppCompatActivity {
 //pass raw arguments by this function
     private void takePicture() {
 
-//        findViewById(R.id.progressBar).setVisibility(View.VISIBLE);
+        findViewById(R.id.progressBar).setVisibility(View.VISIBLE);
         if(cameraDevice == null)
             return;
         CameraManager manager = (CameraManager)getSystemService(Context.CAMERA_SERVICE);
@@ -215,53 +233,22 @@ public class MainActivity extends AppCompatActivity {
                     buffer.get(bytes);
                     bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
                     String imagePath = path+timestamp+".jpg";
+                    if (camFlip==0){
+                        Matrix matrix = new Matrix();
+                        matrix.postRotate(180);
+                        matrix.postScale(-1, 1);
+                        Bitmap bitmap2 = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, false);
+                        bitmap = bitmap2;
+                    }
+                    findViewById(R.id.progressBar).setVisibility(View.INVISIBLE);
                     saveBitmapImage(bitmap,imagePath);
-
                     Intent imgProcess = new Intent(MainActivity.this,ImageProcess.class)
-                    .putExtra("rootPath",pathF+"/")
-                    .putExtra("imagePath",imagePath);
+                            .putExtra("rootPath",pathF+"/")
+                            .putExtra("imagePath",imagePath);
                     startActivity(imgProcess);
+
+
                 }
-
-                public int[][] histogramEqualization(int[][] image,int height,int width) {
-//                    int numRows = image.length;//h
-//                    int numCols = image[0].length;//w
-                    int[] histogram = new int[256];
-                    int[] cumHistogram = new int[256];
-                    int[] equalizedValues = new int[256];
-
-                    // Calculate the histogram of the image
-                    for (int i = 0; i < height; i++) {
-                        for (int j = 0; j < width; j++) {
-                            int pixel = image[i][j];
-                            histogram[pixel]++;
-                        }
-                    }
-
-                    // Calculate the cumulative histogram
-                    cumHistogram[0] = histogram[0];
-                    for (int i = 1; i < 256; i++) {
-                        cumHistogram[i] = cumHistogram[i-1] + histogram[i];
-                    }
-
-                    // Calculate the equalized values for each pixel value
-                    for (int i = 0; i < 256; i++) {
-                        equalizedValues[i] = (int)Math.round(255.0*cumHistogram[i]/(height * width));
-                    }
-
-                    // Create the equalized image
-                    int[][] equalizedImage = new int[height][width];
-                    for (int i = 0; i < height; i++) {
-                        for (int j = 0; j < width; j++) {
-                            int pixel = image[i][j];
-                            int equalizedPixel = equalizedValues[pixel];
-                            equalizedImage[i][j] = equalizedPixel;
-                        }
-                    }
-
-                    return equalizedImage;
-                }
-
 
                 private void saveBitmapImage(Bitmap bitmap,String path) {
                     OutputStream fos;
@@ -286,7 +273,6 @@ public class MainActivity extends AppCompatActivity {
                     super.onCaptureCompleted(session, request, result);
                     Toast.makeText(MainActivity.this, "Image Saved", Toast.LENGTH_SHORT).show();
                     createCameraPreview();
-
 
 //              finish();
                 }
@@ -353,10 +339,11 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+private void openCamera(int camF) {
+    CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+    try {
+        if (camF==1){
 
-    private void openCamera() {
-        CameraManager manager = (CameraManager)getSystemService(Context.CAMERA_SERVICE);
-        try{
             String cameraId = manager.getCameraIdList()[0];
             CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraId);
             StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
@@ -371,16 +358,35 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
             manager.openCamera(cameraId,stateCallback,null);
-
-        } catch (CameraAccessException e) {
-            e.printStackTrace();
         }
+        else {
+            String[] cameraIds = manager.getCameraIdList();
+            for (String cameraId : cameraIds) {
+                CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraId);
+                int cameraFacing = characteristics.get(CameraCharacteristics.LENS_FACING);
+                if (cameraFacing == CameraCharacteristics.LENS_FACING_FRONT) {
+                    // Found front camera
+                    imageDimension = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
+                            .getOutputSizes(SurfaceTexture.class)[0];
+                    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_CAMERA_PERMISSION);
+                        return;
+                    }
+                    manager.openCamera(cameraId, stateCallback, null);
+                    return;
+                }
+            }
+        }
+
+    } catch (CameraAccessException e) {
+        e.printStackTrace();
     }
+}
 
     TextureView.SurfaceTextureListener textureListener = new TextureView.SurfaceTextureListener() {
         @Override
         public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int i, int i1) {
-            openCamera();
+            openCamera(camFlip);
         }
 
         @Override
@@ -415,7 +421,7 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         startBackgroundThread();
         if(textureView.isAvailable())
-            openCamera();
+            openCamera(camFlip);
         else
             textureView.setSurfaceTextureListener(textureListener);
     }
