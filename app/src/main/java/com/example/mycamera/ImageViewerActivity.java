@@ -49,39 +49,31 @@ public class ImageViewerActivity extends AppCompatActivity {
             public void onClick(View v) {
                 MaterialAlertDialogBuilder alertDialogBuilder = new MaterialAlertDialogBuilder(ImageViewerActivity.this);
                 alertDialogBuilder.setMessage("Are you sure you want to delete this image ?");
-                alertDialogBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        String[] projection = new String[]{MediaStore.Images.Media._ID};
-                        String selection = MediaStore.Images.Media.DATA + " = ?";
-                        String[] selectionArgs = new String[]{new File(finalPath).getAbsolutePath()};
-                        Uri queryUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
-                        ContentResolver contentResolver = getContentResolver();
-                        Cursor cursor = contentResolver.query(queryUri, projection, selection, selectionArgs, null);
-                        if (cursor.moveToFirst()) {
-                            long id = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID));
-                            Uri deleteUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
-                            try {
-                                contentResolver.delete(deleteUri, null, null);
-                                boolean delete1 = new File(finalPath).delete();
-                                Log.e("TAG", delete1 + "");
-                                Toast.makeText(ImageViewerActivity.this, "Deleted Successfully", Toast.LENGTH_SHORT).show();
-                                finish();
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                                Toast.makeText(ImageViewerActivity.this, "Deleting Error", Toast.LENGTH_SHORT).show();
-                            }
-                        } else {
-                            Toast.makeText(ImageViewerActivity.this, "File Not Found", Toast.LENGTH_SHORT).show();
+                alertDialogBuilder.setPositiveButton("Yes", (dialog, which) -> {
+                    String[] projection = new String[]{MediaStore.Images.Media._ID};
+                    String selection = MediaStore.Images.Media.DATA + " = ?";
+                    String[] selectionArgs = new String[]{new File(finalPath).getAbsolutePath()};
+                    Uri queryUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+                    ContentResolver contentResolver = getContentResolver();
+                    Cursor cursor = contentResolver.query(queryUri, projection, selection, selectionArgs, null);
+                    if (cursor.moveToFirst()) {
+                        long id = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID));
+                        Uri deleteUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
+                        try {
+                            contentResolver.delete(deleteUri, null, null);
+                            boolean delete1 = new File(finalPath).delete();
+                            Log.e("TAG", delete1 + "");
+                            Toast.makeText(ImageViewerActivity.this, "Deleted Successfully", Toast.LENGTH_SHORT).show();
+                            finish();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            Toast.makeText(ImageViewerActivity.this, "Deleting Error", Toast.LENGTH_SHORT).show();
                         }
+                    } else {
+                        Toast.makeText(ImageViewerActivity.this, "File Not Found", Toast.LENGTH_SHORT).show();
                     }
                 });
-                alertDialogBuilder.setNegativeButton("No", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                });
+                alertDialogBuilder.setNegativeButton("No", (dialog, which) -> dialog.dismiss());
                 alertDialogBuilder.show();
 
             }

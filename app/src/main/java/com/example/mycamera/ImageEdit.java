@@ -41,6 +41,8 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+//import com.marvinlabs.widget.floatinglabel.color.ColorCMYK;
+
 
 public class ImageEdit extends AppCompatActivity {
 
@@ -50,7 +52,7 @@ public class ImageEdit extends AppCompatActivity {
     ImageView sourceImg;
     TextView seekVal,nameImg;
     //                      0/.        1/       2/.              3/.             4/.        5/.       6        7/.          8/.          9/.       10/.     11/.          12/.            13/.       14/.        15/.
-    String[] algoList = {"Original","BW","Negative BW", "Negative Color","Sharpening","Water Art","Retinex","CLAHE","Gaussian Blur","Median Blur","Hue","Saturation","Brightness","HDR Effect","Warm Tone","Cool Tone"};
+    String[] algoList = {"Original","BW","Negative BW", "Negative Color","Sharpening","Water Art","Retinex","CLAHE","Gaussian Blur","Median Blur","Hue","Saturation","Brightness","HDR Effect","Warm Tone","Cool Tone","Cyan","Magenta","Yellow","Black"};
     Bitmap resultBitmap;
     int choice,seekBarValue,changeStatus=0;
     @Override
@@ -58,9 +60,7 @@ public class ImageEdit extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_image_edit_new);
 
-        LottieAnimationView load = (LottieAnimationView) findViewById(R.id.load);
-        load.setVisibility(View.GONE);
-
+//        findViewById(R.id.lottieLoad).setVisibility(View.INVISIBLE);
         //Get Image from another intent.
         Intent intent = getIntent();
         String imagePath = intent.getStringExtra("imagePath");
@@ -88,7 +88,7 @@ public class ImageEdit extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 choice = position;
-                if (position==14||position==15||position==9||position==8||position==7||position==4||position==1||position==2){
+                if (position==13||position==14||position==15||position==9||position==8||position==7||position==4||position==1||position==2){
                     seekBar.setProgress(0);
                     seekBarValue = 0;
                 }
@@ -128,7 +128,7 @@ public class ImageEdit extends AppCompatActivity {
             }
         });
         findViewById(R.id.applyAlgo).setOnClickListener(v -> {
-            load.setVisibility(View.VISIBLE);
+            findViewById(R.id.lottieLoad).setVisibility(View.VISIBLE);
             resultBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
             switch (choice){
                 case 0: //ORIGINAL
@@ -198,13 +198,24 @@ public class ImageEdit extends AppCompatActivity {
                     float toneCool = seekScalling(seekBarValue,0,100,0,1);
                     resultBitmap = applyTone(bitmap,toneCool,15);
                     break;
+                case 16:
+                    resultBitmap = applyCYMK(bitmap,width,height,seekBarValue,1);
+                    break;
+                case 17:
+                    resultBitmap = applyCYMK(bitmap,width,height,seekBarValue,2);
+                    break;
+                case 18:
+                    resultBitmap = applyCYMK(bitmap,width,height,seekBarValue,3);
+                    break;
+                case 19:
+                    resultBitmap = applyCYMK(bitmap,width,height,seekBarValue,4);
+                    break;
             }
 //            resultImg.setImageBitmap(resultBitmap);
             sourceImg.setImageBitmap(resultBitmap);
             changeStatus = 1;
             nameImg.setText(""+algoList[choice]+"-"+seekBarValue);
-            load.setVisibility(View.GONE);
-
+            findViewById(R.id.lottieLoad).setVisibility(View.INVISIBLE);
         });
         findViewById(R.id.save).setOnClickListener(v -> {
 
@@ -221,7 +232,7 @@ public class ImageEdit extends AppCompatActivity {
                 if (changeStatus==0){
                     sourceImg.setImageBitmap(resultBitmap);
                     changeStatus=1;
-                    nameImg.setText("("+algoList[choice]+")-"+seekBarValue);
+                    nameImg.setText(""+algoList[choice]+"-"+seekBarValue);
                 }else {
                     sourceImg.setImageBitmap(bitmap);
                     changeStatus=0;
@@ -235,6 +246,7 @@ public class ImageEdit extends AppCompatActivity {
             }
         });
     }
+
 
 //    private Bitmap applyVignette(Bitmap bitmap, Mat mat, int w, int h, int seekBarValue) {
 //        //work in progress..
@@ -263,6 +275,43 @@ public class ImageEdit extends AppCompatActivity {
 //        return  vignette;
 //    }
 
+    private Bitmap applyCYMK(Bitmap bitmap,int width, int height, int seekBarValue,int CYMKchoice){
+        Bitmap res = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        int[] pixels = new int[width * height];
+        bitmap.getPixels(pixels, 0, width, 0, 0, width, height);
+
+        float val = seekScalling(seekBarValue,0,100,0.5F,2);
+
+        for (int i = 0; i < pixels.length; i++) {
+            int pixel = pixels[i];
+
+            int cyan = 255 - Color.red(pixel);
+            int magenta = 255 - Color.green(pixel);
+            int yellow = 255 - Color.blue(pixel);
+            int black = Math.min(cyan, Math.min(magenta, yellow));
+
+            // Edit the CMYK values here
+            if (CYMKchoice==1)
+                cyan *= val;
+            else if (CYMKchoice==2)
+                magenta *= val;
+            else if(CYMKchoice==3)
+                yellow*=val;
+            else if(CYMKchoice==4)
+                black*=val;
+            else
+                cyan*=1;
+
+            int newCyan = Color.argb(255, cyan, cyan, cyan);
+            int newMagenta = Color.argb(255, magenta, magenta, magenta);
+            int newYellow = Color.argb(255, yellow, yellow, yellow);
+            int newBlack = Color.argb(255, black, black, black);
+
+            int newPixel = Color.argb(255, 255-newCyan, 255-newMagenta, 255-newYellow);
+            res.setPixel(i % width, i / width, newPixel);
+        }
+        return res;
+    }
     private Bitmap applyWaterArt(Bitmap bitmap, Mat mat, int w, int h, int seekBarValue) {
         Bitmap res= Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
         int s = (int)seekScalling(seekBarValue,0,100,3,11);

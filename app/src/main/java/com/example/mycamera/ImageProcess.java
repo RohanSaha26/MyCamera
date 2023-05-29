@@ -80,107 +80,113 @@ public class ImageProcess extends AppCompatActivity {
         ImageView imgprocessView = (ImageView) findViewById(R.id.imgProcessView);
         imgprocessView.setImageBitmap(bitmap);
         findViewById(R.id.saveImg).setOnClickListener(v -> {
-            File folder = new File(path);
-            if (!folder.exists()) {
-                folder.mkdir();
-            };
-            //@------
-            if(cR.isChecked()||cG.isChecked()||cB.isChecked()||cGr.isChecked()||cGrn.isChecked()||cCn.isChecked()||cS2.isChecked()){
-                Bitmap redB = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-                Bitmap greenB = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-                Bitmap blueB = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-                Bitmap grayScaleB = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-                Bitmap negGrayScaleB = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-                Bitmap negColorB = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-                Bitmap saturatedB = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-                for (int y = 0; y < height; y++) {
-                    for (int x = 0; x < width; x++) {
-                        int pixel = bitmap.getPixel(x, y);
-                        int red = Color.red(pixel);
-                        int green = Color.green(pixel);
-                        int blue = Color.blue(pixel);
-                        int gray = (int) (0.2989 * red + 0.5870 * green + 0.1140 * blue);
-                        redB.setPixel(x, y, Color.rgb(red, 0, 0));
-                        greenB.setPixel(x, y, Color.rgb(0, green, 0));
-                        blueB.setPixel(x, y, Color.rgb(0, 0, blue));
-                        grayScaleB.setPixel(x, y, Color.rgb(gray, gray, gray));
-                        negGrayScaleB.setPixel(x, y, Color.rgb(255 - gray, 255 - gray, 255 - gray));
-                        negColorB.setPixel(x, y, Color.rgb(255-red, 255-green, 255-blue));
 
-                        //Saturated
-                        float[] hsv = new float[3];
-                        Color.RGBToHSV(red, green, blue, hsv);
-                        //hsv[0] => hue ; hsv[1] => saturation ; hue[2] => value
-                        float hue = hsv[0],saturation = hsv[1], value = hsv[2];
+
+            if(!(cR.isChecked()||cG.isChecked()||cB.isChecked()||cGr.isChecked()||cGrn.isChecked()||cCn.isChecked()||cS2.isChecked()||
+                    cBlur.isChecked()||cSharp.isChecked()||cLap.isChecked()|| cCLAHE.isChecked()))
+            {
+                Toast.makeText(this,"Select any checkbox to save.",Toast.LENGTH_SHORT).show();
+            }
+            else
+            {
+                File folder = new File(path);
+                if (!folder.exists()) {
+                    folder.mkdir();
+                };
+                if(cR.isChecked()||cG.isChecked()||cB.isChecked()||cGr.isChecked()||cGrn.isChecked()||cCn.isChecked()||cS2.isChecked()){
+                    Bitmap redB = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+                    Bitmap greenB = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+                    Bitmap blueB = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+                    Bitmap grayScaleB = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+                    Bitmap negGrayScaleB = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+                    Bitmap negColorB = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+                    Bitmap saturatedB = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+                    for (int y = 0; y < height; y++) {
+                        for (int x = 0; x < width; x++) {
+                            int pixel = bitmap.getPixel(x, y);
+                            int red = Color.red(pixel);
+                            int green = Color.green(pixel);
+                            int blue = Color.blue(pixel);
+                            int gray = (int) (0.2989 * red + 0.5870 * green + 0.1140 * blue);
+                            redB.setPixel(x, y, Color.rgb(red, 0, 0));
+                            greenB.setPixel(x, y, Color.rgb(0, green, 0));
+                            blueB.setPixel(x, y, Color.rgb(0, 0, blue));
+                            grayScaleB.setPixel(x, y, Color.rgb(gray, gray, gray));
+                            negGrayScaleB.setPixel(x, y, Color.rgb(255 - gray, 255 - gray, 255 - gray));
+                            negColorB.setPixel(x, y, Color.rgb(255-red, 255-green, 255-blue));
+
+                            //Saturated
+                            float[] hsv = new float[3];
+                            Color.RGBToHSV(red, green, blue, hsv);
+                            //hsv[0] => hue ; hsv[1] => saturation ; hue[2] => value
+                            float hue = hsv[0],saturation = hsv[1], value = hsv[2];
 //                                hue*=2;saturation *= 2;value*=2;
-                        saturation*=2;
-                        hsv[0] = hue ; hsv[1] = saturation ; hsv[2] = value;
-                        int color = Color.HSVToColor(hsv);
-                        saturatedB.setPixel(x, y, Color.rgb(Color.red(color), Color.green(color), Color.blue(color)));
+                            saturation*=2;
+                            hsv[0] = hue ; hsv[1] = saturation ; hsv[2] = value;
+                            int color = Color.HSVToColor(hsv);
+                            saturatedB.setPixel(x, y, Color.rgb(Color.red(color), Color.green(color), Color.blue(color)));
 
+                        }
                     }
+                    if (cR.isChecked())
+                        saveBitmapImage(redB,path+"/"+fileNameWithoutExtension+"-red.jpg");
+                    if (cG.isChecked())
+                        saveBitmapImage(greenB,path+"/"+fileNameWithoutExtension+"-greenB.jpg");
+                    if (cB.isChecked())
+                        saveBitmapImage(blueB,path+"/"+fileNameWithoutExtension+"-blue.jpg");
+                    if (cGr.isChecked())
+                        saveBitmapImage(grayScaleB,path+"/"+fileNameWithoutExtension+"-bw.jpg");
+                    if (cGrn.isChecked())
+                        saveBitmapImage(negGrayScaleB,path+"/"+fileNameWithoutExtension+"-bw-negative.jpg");
+                    if (cCn.isChecked())
+                        saveBitmapImage(negColorB,path+"/"+fileNameWithoutExtension+"-col-negative.jpg");
+                    if (cS2.isChecked())
+                        saveBitmapImage(saturatedB,path+"/"+fileNameWithoutExtension+"-saturatedX2.jpg");
+
                 }
-                if (cR.isChecked())
-                    saveBitmapImage(redB,path+"/"+fileNameWithoutExtension+"-red.jpg");
-                if (cG.isChecked())
-                    saveBitmapImage(greenB,path+"/"+fileNameWithoutExtension+"-greenB.jpg");
-                if (cB.isChecked())
-                    saveBitmapImage(blueB,path+"/"+fileNameWithoutExtension+"-blue.jpg");
-                if (cGr.isChecked())
-                    saveBitmapImage(grayScaleB,path+"/"+fileNameWithoutExtension+"-bw.jpg");
-                if (cGrn.isChecked())
-                    saveBitmapImage(negGrayScaleB,path+"/"+fileNameWithoutExtension+"-bw-negative.jpg");
-                if (cCn.isChecked())
-                    saveBitmapImage(negColorB,path+"/"+fileNameWithoutExtension+"-col-negative.jpg");
-                if (cS2.isChecked())
-                    saveBitmapImage(saturatedB,path+"/"+fileNameWithoutExtension+"-saturatedX2.jpg");
+                Mat mat = new Mat();
+                Utils.bitmapToMat(bitmap, mat);
+                org.opencv.core.Size kernelSize7 = new org.opencv.core.Size(7,7);
+                if (cBlur.isChecked()) {//MEDIAN BLUR
+                    int k = 9;
+                    Mat clearedMat = new Mat();
+                    Imgproc.medianBlur(mat,clearedMat,k);
+                    Bitmap blB = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+                    Utils.matToBitmap(clearedMat, blB);
+                    saveBitmapImage(blB,path+"/"+fileNameWithoutExtension+"-blur.jpg");
+                }
+                if (cSharp.isChecked()){//SHARPENED
+                    Mat gaussMat = new Mat();
+                    Mat sharped = new Mat();
+                    Imgproc.GaussianBlur(mat, gaussMat, kernelSize7, 0);
+                    Core.addWeighted(mat,5.5,gaussMat,-4.5,0,sharped);
+                    Bitmap sharpB = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+                    Utils.matToBitmap(sharped, sharpB);
+                    saveBitmapImage(sharpB,path+"/"+fileNameWithoutExtension+"-sharpened.jpg");
 
+                }
+                if(cLap.isChecked()){//LAPLACIAN
+                    Mat laplas = new Mat();
+                    Mat grayImage = new Mat();
+                    Mat laplacianImage = new Mat();
+                    Imgproc.cvtColor(mat, grayImage, Imgproc.COLOR_BGR2GRAY);
+                    Imgproc.Laplacian(grayImage, laplacianImage, CvType.CV_16S, 3);
+                    laplacianImage.convertTo(laplacianImage, CvType.CV_8U);
+                    mat.copyTo(laplas, laplacianImage);
+                    Bitmap lapB = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+                    Utils.matToBitmap(laplas, lapB);
+                    saveBitmapImage(lapB,path+"/"+fileNameWithoutExtension+"-laplas.jpg");
+                }
+                if (cCLAHE.isChecked()){//CLAHE
+                    Mat claheMat = applyCLAHE(mat);
+                    Bitmap claheB = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+                    Utils.matToBitmap(claheMat, claheB);
+                    saveBitmapImage(claheB,path+"/"+fileNameWithoutExtension+"-CLAHE.jpg");
+                }
+                Toast.makeText(this,"Images Saved.",Toast.LENGTH_SHORT).show();
+                finish();
             }
-            //@------
-            //&------
-            Mat mat = new Mat();
-            Utils.bitmapToMat(bitmap, mat);
-            org.opencv.core.Size kernelSize7 = new org.opencv.core.Size(7,7);
-            if (cBlur.isChecked()) {//MEDIAN BLUR
-                int k = 9;
-                Mat clearedMat = new Mat();
-                Imgproc.medianBlur(mat,clearedMat,k);
-                Bitmap blB = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-                Utils.matToBitmap(clearedMat, blB);
-                saveBitmapImage(blB,path+"/"+fileNameWithoutExtension+"-blur.jpg");
-            }
-            if (cSharp.isChecked()){//SHARPENED
-                Mat gaussMat = new Mat();
-                Mat sharped = new Mat();
-                Imgproc.GaussianBlur(mat, gaussMat, kernelSize7, 0);
-                Core.addWeighted(mat,5.5,gaussMat,-4.5,0,sharped);
-                Bitmap sharpB = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-                Utils.matToBitmap(sharped, sharpB);
-                saveBitmapImage(sharpB,path+"/"+fileNameWithoutExtension+"-sharpened.jpg");
 
-            }
-            if(cLap.isChecked()){//LAPLACIAN
-                Mat laplas = new Mat();
-                Mat grayImage = new Mat();
-                Mat laplacianImage = new Mat();
-                Imgproc.cvtColor(mat, grayImage, Imgproc.COLOR_BGR2GRAY);
-                Imgproc.Laplacian(grayImage, laplacianImage, CvType.CV_16S, 3);
-                laplacianImage.convertTo(laplacianImage, CvType.CV_8U);
-                mat.copyTo(laplas, laplacianImage);
-                Bitmap lapB = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-                Utils.matToBitmap(laplas, lapB);
-                saveBitmapImage(lapB,path+"/"+fileNameWithoutExtension+"-laplas.jpg");
-            }
-            if (cCLAHE.isChecked()){//CLAHE
-                Mat claheMat = applyCLAHE(mat);
-                Bitmap claheB = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-                Utils.matToBitmap(claheMat, claheB);
-                saveBitmapImage(claheB,path+"/"+fileNameWithoutExtension+"-CLAHE.jpg");
-            }
-            //&------
-
-            Toast.makeText(this,"Images Saved.",Toast.LENGTH_SHORT).show();
-            finish();
         });
 
         findViewById(R.id.closeIntent).setOnClickListener(v -> {

@@ -29,8 +29,6 @@
         app:layout_constraintVertical_bias="0.935"
         app:srcCompat="@drawable/ic_baseline_photo_camera_24" />
 
-
-
     <Button
         android:id="@+id/galleryBtn"
         android:layout_width="wrap_content"
@@ -41,15 +39,41 @@
         app:layout_constraintStart_toEndOf="@+id/captureBtn"
         app:layout_constraintTop_toTopOf="@+id/captureBtn" />
 
-    <ProgressBar
+    <!--    <ProgressBar-->
+    <!--        android:id="@+id/progressBar"-->
+    <!--        android:layout_width="45dp"-->
+    <!--        android:layout_height="45dp"-->
+    <!--        app:layout_constraintBottom_toBottomOf="@+id/imgView"-->
+    <!--        app:layout_constraintEnd_toEndOf="@+id/imgView"-->
+    <!--        app:layout_constraintStart_toStartOf="@+id/imgView"-->
+    <!--        app:layout_constraintTop_toTopOf="@+id/imgView"-->
+    <!--        android:visibility="visible"/>-->
+
+    <com.airbnb.lottie.LottieAnimationView
         android:id="@+id/progressBar"
-        android:layout_width="45dp"
-        android:layout_height="45dp"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="@+id/imgView"
         app:layout_constraintEnd_toEndOf="@+id/imgView"
         app:layout_constraintStart_toStartOf="@+id/imgView"
         app:layout_constraintTop_toTopOf="@+id/imgView"
-        android:visibility="invisible"/>
+        app:lottie_autoPlay="true"
+        app:lottie_loop="true"
+        app:lottie_rawRes="@raw/loading"
+        tools:ignore="MissingConstraints" />
+
+    <ImageView
+        android:id="@+id/cameraChange"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        app:layout_constraintBottom_toBottomOf="@+id/captureBtn"
+        app:layout_constraintEnd_toStartOf="@+id/captureBtn"
+        app:layout_constraintHorizontal_bias="0.398"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/captureBtn"
+        app:layout_constraintVertical_bias="0.75"
+        app:srcCompat="@drawable/camflip" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,5 +1,6 @@
 package com.example.mycamera;
 
+import static androidx.core.math.MathUtils.clamp;
 import static org.opencv.core.CvType.CV_32F;
 
 import android.Manifest;
@@ -29,6 +30,8 @@ import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.TotalCaptureResult;
+import android.hardware.camera2.params.ColorSpaceTransform;
+import android.hardware.camera2.params.RggbChannelVector;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.Image;
 import android.media.ImageReader;
@@ -39,6 +42,8 @@ import android.os.HandlerThread;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.util.Range;
+import android.util.Rational;
 import android.util.Size;
 import android.util.SparseIntArray;
 import android.view.Surface;
@@ -83,10 +88,16 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import androidx.lifecycle.Lifecycle;
+import android.os.Bundle;
+import android.app.Dialog;
+import android.app.Activity;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -105,6 +116,8 @@ public class MainActivity extends AppCompatActivity {
     private CameraDevice cameraDevice;
     private CameraCaptureSession cameraCaptureSessions;
     private CaptureRequest.Builder captureRequestBuilder;
+    CameraCharacteristics characteristics;
+    CameraManager manager;
     private android.util.Size imageDimension;
     //Save to FILE
     private File file;
@@ -193,7 +206,7 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.progressBar).setVisibility(View.VISIBLE);
         if(cameraDevice == null)
             return;
-        CameraManager manager = (CameraManager)getSystemService(Context.CAMERA_SERVICE);
+        manager = (CameraManager)getSystemService(Context.CAMERA_SERVICE);
         try{
             CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraDevice.getId());
             Size[] jpegSizes = null;
@@ -223,9 +236,9 @@ public class MainActivity extends AppCompatActivity {
             //Check orientation base on device
             int rotation = getWindowManager().getDefaultDisplay().getRotation();
             captureBuilder.set(CaptureRequest.JPEG_ORIENTATION,ORIENTATIONS.get(rotation));
-            long timestamp = Calendar.getInstance().getTimeInMillis();
-
-            String path = pathF + "/MYCAM-";
+//            long timestamp = Calendar.getInstance().getTimeInMillis();
+            String timestamp = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss").format(new Date());
+            String path = pathF + "/MYCAM_";
             file = new File(path+timestamp+".jpg");
 
             ImageReader.OnImageAvailableListener readerListener = new ImageReader.OnImageAvailableListener() {
@@ -248,9 +261,19 @@ public class MainActivity extends AppCompatActivity {
                     findViewById(R.id.progressBar).setVisibility(View.INVISIBLE);
                     saveBitmapImage(bitmap,imagePath);
                     Intent imgProcess = new Intent(MainActivity.this,ImageProcess.class)
-                            .putExtra("rootPath",pathF+"/")
-                            .putExtra("imagePath",imagePath);
-                    startActivity(imgProcess);
+                                .putExtra("rootPath",pathF+"/")
+                                .putExtra("imagePath",imagePath);
+                        startActivity(imgProcess);
+
+//                    MaterialAlertDialogBuilder alertDialogBuilder = new MaterialAlertDialogBuilder(MainActivity.this);
+//                    alertDialogBuilder.setMessage("Do you want more processed of this image?");
+//                    alertDialogBuilder.setPositiveButton("Yes", (dialog, which) -> {
+//                        dialog.dismiss();
+//                    });
+//                    alertDialogBuilder.setNegativeButton("No", (dialog, which) -> {
+//                        dialog.dismiss();
+//                    });
+//                    alertDialogBuilder.show();
 
 
                 }
@@ -337,6 +360,8 @@ public class MainActivity extends AppCompatActivity {
         if(cameraDevice == null)
             Toast.makeText(this, "Error", Toast.LENGTH_SHORT).show();
         captureRequestBuilder.set(CaptureRequest.CONTROL_MODE,CaptureRequest.CONTROL_MODE_AUTO);
+
+
         try{
             cameraCaptureSessions.setRepeatingRequest(captureRequestBuilder.build(),null,mBackgroundHandler);
         } catch (CameraAccessException e) {
@@ -344,13 +369,75 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-private void openCamera(int camF) {
+    private RggbChannelVector cctToRGBCV(int cct) {
+        // Calculate the R, G, and B gains based on the CCT
+        float redGain, greenGain, blueGain;
+
+// Calculate red gain
+        float temperature = cct / 100.0f;
+        if (temperature <= 66) {
+            redGain = 255;
+        } else {
+            redGain = temperature - 60;
+            redGain = (float) (329.698727446 * Math.pow(redGain, -0.1332047592));
+            if (redGain < 0) {
+                redGain = 0;
+            } else if (redGain > 255) {
+                redGain = 255;
+            }
+        }
+
+// Calculate green gain
+        if (temperature <= 66) {
+            greenGain = temperature;
+            greenGain = (float) (99.4708025861 * Math.log(greenGain) - 161.1195681661);
+            if (greenGain < 0) {
+                greenGain = 0;
+            } else if (greenGain > 255) {
+                greenGain = 255;
+            }
+        } else {
+            greenGain = temperature - 60;
+            greenGain = (float) (288.1221695283 * Math.pow(greenGain, -0.0755148492));
+            if (greenGain < 0) {
+                greenGain = 0;
+            } else if (greenGain > 255) {
+                greenGain = 255;
+            }
+        }
+
+// Calculate blue gain
+        if (temperature >= 66) {
+            blueGain = 255;
+        } else if (temperature <= 19) {
+            blueGain = 0;
+        } else {
+            blueGain = temperature - 10;
+            blueGain = (float) (138.5177312231 * Math.log(blueGain) - 305.0447927307);
+            if (blueGain < 0) {
+                blueGain = 0;
+            } else if (blueGain > 255) {
+                blueGain = 255;
+            }
+        }
+
+// Create the RggbChannelVector with the calculated gains
+        RggbChannelVector rggbChannelVector = new RggbChannelVector(
+                redGain / 255.0f,
+                greenGain / 255.0f,
+                greenGain / 255.0f,
+                blueGain / 255.0f
+        );
+        return  rggbChannelVector;
+    }
+
+    private void openCamera(int camF) {
     CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
     try {
         if (camF==1){
 
             String cameraId = manager.getCameraIdList()[0];
-            CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraId);
+            characteristics = manager.getCameraCharacteristics(cameraId);
             StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
             assert map != null;
             imageDimension = map.getOutputSizes(SurfaceTexture.class)[0];

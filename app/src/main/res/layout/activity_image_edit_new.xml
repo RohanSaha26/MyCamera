@@ -104,16 +104,14 @@
         app:srcCompat="@drawable/change" />
 
     <com.airbnb.lottie.LottieAnimationView
-        android:id="@+id/load"
+        android:id="@+id/lottieLoad"
         android:layout_width="70dp"
         android:layout_height="70dp"
-        android:visibility="visible"
-        app:layout_constraintBottom_toTopOf="@+id/img1"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="@+id/img1"
         app:layout_constraintEnd_toEndOf="@+id/img1"
-        app:layout_constraintHorizontal_bias="0.502"
         app:layout_constraintStart_toStartOf="@+id/img1"
-        app:layout_constraintTop_toBottomOf="@+id/bar"
-        app:layout_constraintVertical_bias="0.496"
+        app:layout_constraintTop_toTopOf="@+id/img1"
         app:lottie_autoPlay="true"
         app:lottie_loop="true"
         app:lottie_rawRes="@raw/loading"
