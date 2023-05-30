@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".PROActivity">
+
+
+    <TextureView
+        android:id="@+id/imgView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@id/captureBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.935"
+        app:srcCompat="@drawable/ic_baseline_photo_camera_24" />
+
+    <Button
+        android:id="@+id/galleryBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Gallery"
+        app:layout_constraintBottom_toBottomOf="@+id/captureBtn"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/captureBtn"
+        app:layout_constraintTop_toTopOf="@+id/captureBtn" />
+
+    <com.airbnb.lottie.LottieAnimationView
+        android:id="@+id/progressBar"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="@+id/imgView"
+        app:layout_constraintEnd_toEndOf="@+id/imgView"
+        app:layout_constraintStart_toStartOf="@+id/imgView"
+        app:layout_constraintTop_toTopOf="@+id/imgView"
+        app:lottie_autoPlay="true"
+        app:lottie_loop="true"
+        app:lottie_rawRes="@raw/loading"
+        tools:ignore="MissingConstraints" />
+
+    <ImageView
+        android:id="@+id/cameraChange"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        app:layout_constraintBottom_toBottomOf="@+id/captureBtn"
+        app:layout_constraintEnd_toStartOf="@+id/captureBtn"
+        app:layout_constraintHorizontal_bias="0.398"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/captureBtn"
+        app:layout_constraintVertical_bias="0.75"
+        app:srcCompat="@drawable/camflip" />
+
+    <ImageView
+        android:id="@+id/rawOff"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        app:layout_constraintBottom_toTopOf="@+id/galleryBtn"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.894"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/imgView"
+        app:layout_constraintVertical_bias="0.022"
+        app:srcCompat="@drawable/raw_off" />
+
+    <SeekBar
+        android:id="@+id/isoSeek"
+        android:layout_width="305dp"
+        android:layout_height="27dp"
+        android:max="100"
+        android:progress="50"
+        android:progressTint="@color/blue"
+        android:thumb="@drawable/point"
+        android:thumbTint="@color/blue"
+        app:layout_constraintBottom_toTopOf="@+id/captureBtn"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.488"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/imgView"
+        app:layout_constraintVertical_bias="0.665" />
+
+    <SeekBar
+        android:id="@+id/wbSeek"
+        android:layout_width="305dp"
+        android:layout_height="27dp"
+        android:max="100"
+        android:progress="50"
+        android:progressTint="@color/blue"
+        android:thumb="@drawable/point"
+        android:thumbTint="@color/blue"
+        app:layout_constraintBottom_toTopOf="@+id/aeSeek"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/isoSeek"
+        app:layout_constraintVertical_bias="0.4" />
+
+    <SeekBar
+        android:id="@+id/aeSeek"
+        android:layout_width="305dp"
+        android:layout_height="27dp"
+        android:max="100"
+        android:progress="50"
+        android:progressTint="@color/blue"
+        android:thumb="@drawable/point"
+        android:thumbTint="@color/blue"
+        app:layout_constraintBottom_toTopOf="@+id/fdSeek"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/isoSeek"
+        app:layout_constraintVertical_bias="0.83" />
+
+    <SeekBar
+        android:id="@+id/fdSeek"
+        android:layout_width="305dp"
+        android:layout_height="27dp"
+        android:max="100"
+        android:progress="50"
+        android:progressTint="@color/blue"
+        android:thumb="@drawable/point"
+        android:thumbTint="@color/blue"
+        app:layout_constraintBottom_toTopOf="@+id/captureBtn"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.488"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/isoSeek"
+        app:layout_constraintVertical_bias="0.441" />
+
+    <Button
+        android:id="@+id/applyRAW"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="36dp"
+        android:text="Apply"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/fdSeek"
+        app:layout_constraintHorizontal_bias="0.504"
+        app:layout_constraintStart_toStartOf="@+id/fdSeek"
+        app:layout_constraintTop_toBottomOf="@+id/fdSeek"
+        app:layout_constraintVertical_bias="0.0" />
+
+    <TextView
+        android:id="@+id/isoText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="ISO"
+        android:textColor="@color/black"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@+id/isoSeek"
+        app:layout_constraintEnd_toStartOf="@+id/isoSeek"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/isoSeek" />
+    <TextView
+        android:id="@+id/wbText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="WB"
+        android:textColor="@color/black"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@+id/wbSeek"
+        app:layout_constraintEnd_toStartOf="@+id/wbSeek"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/wbSeek"
+        app:layout_constraintVertical_bias="1.0" />
+
+    <TextView
+        android:id="@+id/aeText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="AE"
+        android:textColor="@color/black"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@+id/aeSeek"
+        app:layout_constraintEnd_toStartOf="@+id/aeSeek"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/aeSeek" />
+
+    <TextView
+        android:id="@+id/fdText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="FD"
+        android:textColor="@color/black"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@+id/fdSeek"
+        app:layout_constraintEnd_toStartOf="@+id/fdSeek"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/fdSeek"
+        app:layout_constraintVertical_bias="1.0" />
+
+    <TextView
+        android:id="@+id/isoVal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="50"
+        android:textColor="@color/black"
+        app:layout_constraintBottom_toBottomOf="@+id/isoSeek"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/isoSeek"
+        app:layout_constraintTop_toTopOf="@+id/isoSeek" />
+
+    <TextView
+        android:id="@+id/wbVal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="50"
+        android:textColor="@color/black"
+        app:layout_constraintBottom_toBottomOf="@+id/wbSeek"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/wbSeek"
+        app:layout_constraintTop_toTopOf="@+id/wbSeek" />
+
+    <TextView
+        android:id="@+id/aeVal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="50"
+        android:textColor="@color/black"
+        app:layout_constraintBottom_toBottomOf="@+id/aeSeek"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/aeSeek"
+        app:layout_constraintTop_toTopOf="@+id/aeSeek" />
+
+    <TextView
+        android:id="@+id/fdVal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="50"
+        android:textColor="@color/black"
+        app:layout_constraintBottom_toBottomOf="@+id/fdSeek"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/fdSeek"
+        app:layout_constraintTop_toTopOf="@+id/fdSeek" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

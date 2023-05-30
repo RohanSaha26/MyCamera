@@ -19,6 +19,14 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MyCamera"
         tools:targetApi="31">
+        <activity
+            android:name=".PROActivity"
+            android:exported="false">
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />
+        </activity>
+
         <meta-data
             android:name="com.google.android.actions"
             android:resource="@xml/flip_in" />

@@ -1,6 +1,5 @@
 package com.example.mycamera;
 
-import static androidx.core.math.MathUtils.clamp;
 import static org.opencv.core.CvType.CV_32F;
 
 import android.Manifest;
@@ -30,7 +29,6 @@ import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.TotalCaptureResult;
-import android.hardware.camera2.params.ColorSpaceTransform;
 import android.hardware.camera2.params.RggbChannelVector;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.Image;
@@ -42,8 +40,6 @@ import android.os.HandlerThread;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
-import android.util.Range;
-import android.util.Rational;
 import android.util.Size;
 import android.util.SparseIntArray;
 import android.view.Surface;
@@ -52,6 +48,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
+import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -88,19 +85,13 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
-import androidx.lifecycle.Lifecycle;
-import android.os.Bundle;
-import android.app.Dialog;
-import android.app.Activity;
 
 
-public class MainActivity extends AppCompatActivity {
+public class PROActivity extends AppCompatActivity {
 
     private TextureView textureView;
 
@@ -116,8 +107,6 @@ public class MainActivity extends AppCompatActivity {
     private CameraDevice cameraDevice;
     private CameraCaptureSession cameraCaptureSessions;
     private CaptureRequest.Builder captureRequestBuilder;
-    CameraCharacteristics characteristics;
-    CameraManager manager;
     private android.util.Size imageDimension;
     //Save to FILE
     private File file;
@@ -126,9 +115,10 @@ public class MainActivity extends AppCompatActivity {
     private HandlerThread mBackgroundThread;
 
     String pathF = Environment.getExternalStorageDirectory()+"/DCIM/MyCamera";
-    private int isoVal;
-    private float focusVal;
     public Bitmap bitmap,bitmap1;
+
+    int isoValue,wbValue;
+    float aeValue,fdValue;
     int camFlip; //1 - back , 0 - front
 
     PrintHelper printHelper = new PrintHelper(this);
@@ -155,7 +145,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_pro_activity);
         Button galleryBtn = (Button)findViewById(R.id.galleryBtn);
         ImageView cameraChangeBtn = (ImageView)findViewById(R.id.cameraChange);
         findViewById(R.id.progressBar).setVisibility(View.INVISIBLE);
@@ -164,22 +154,106 @@ public class MainActivity extends AppCompatActivity {
         if (!folder.exists()) {
             folder.mkdir();
         }
+//ISO
+        SeekBar isoSeek= (SeekBar)findViewById(R.id.isoSeek);
+        TextView isoVal = (TextView) findViewById(R.id.isoVal);
+        isoSeek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                isoValue = progress;
+                isoVal.setText(progress+"");
+            }
 
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
 
-        findViewById(R.id.rawOn).setOnClickListener(v -> {
-            Intent rowModeON;
-            rowModeON  = new Intent(MainActivity.this,PROActivity.class);
-            startActivity(rowModeON);
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+//WB
+        SeekBar wbSeek= (SeekBar)findViewById(R.id.wbSeek);
+        TextView wbVal = (TextView) findViewById(R.id.wbVal);
+        wbSeek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                wbValue = progress;
+                wbVal.setText(progress+"");
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+//AE
+        SeekBar aeSeek= (SeekBar)findViewById(R.id.aeSeek);
+        TextView aeVal = (TextView) findViewById(R.id.aeVal);
+        aeSeek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                aeValue = progress;
+                aeVal.setText(progress+"");
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+//FD
+        SeekBar fdSeek= (SeekBar)findViewById(R.id.fdSeek);
+        TextView fdVal = (TextView) findViewById(R.id.fdVal);
+        fdSeek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                fdValue = progress;
+                fdVal.setText(progress+"");
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+
+        Button applyRAW = findViewById(R.id.applyRAW);
+        applyRAW.setOnClickListener(v -> {
+            //Click on apply
+        });
+        findViewById(R.id.rawOff).setOnClickListener(v -> {
+            Intent rowModeFF;
+            rowModeFF  = new Intent(PROActivity.this,MainActivity.class);
+            startActivity(rowModeFF);
             overridePendingTransition(R.anim.flip_in, R.anim.flip_out);
             finish();
         });
+
 //        camFlip = 1;
         cameraChangeBtn.setOnClickListener(v -> {
             Intent camChange;
             if(camFlip == 1)
-                 camChange  = new Intent(MainActivity.this,MainActivity.class).putExtra("flip",0);
+                camChange  = new Intent(PROActivity.this,PROActivity.class).putExtra("flip",0);
             else
-                 camChange  = new Intent(MainActivity.this,MainActivity.class).putExtra("flip",1);
+                camChange  = new Intent(PROActivity.this,PROActivity.class).putExtra("flip",1);
             startActivity(camChange);
             overridePendingTransition(R.anim.flip_in, R.anim.flip_out);
             finish();
@@ -189,7 +263,7 @@ public class MainActivity extends AppCompatActivity {
         camFlip = getIntent().getIntExtra("flip",1);
 
         galleryBtn.setOnClickListener(v -> {
-            Intent gallery = new Intent(MainActivity.this,GalleryActivity.class).putExtra("rootPath",pathF+"/");
+            Intent gallery = new Intent(PROActivity.this,GalleryActivity.class).putExtra("rootPath",pathF+"/");
             startActivity(gallery);
         });
 
@@ -207,13 +281,13 @@ public class MainActivity extends AppCompatActivity {
         });
 
     }
-//pass raw arguments by this function
+    //pass raw arguments by this function
     private void takePicture() {
 
         findViewById(R.id.progressBar).setVisibility(View.VISIBLE);
         if(cameraDevice == null)
             return;
-        manager = (CameraManager)getSystemService(Context.CAMERA_SERVICE);
+        CameraManager manager = (CameraManager)getSystemService(Context.CAMERA_SERVICE);
         try{
             CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraDevice.getId());
             Size[] jpegSizes = null;
@@ -243,9 +317,9 @@ public class MainActivity extends AppCompatActivity {
             //Check orientation base on device
             int rotation = getWindowManager().getDefaultDisplay().getRotation();
             captureBuilder.set(CaptureRequest.JPEG_ORIENTATION,ORIENTATIONS.get(rotation));
-//            long timestamp = Calendar.getInstance().getTimeInMillis();
-            String timestamp = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss").format(new Date());
-            String path = pathF + "/MYCAM_";
+            long timestamp = Calendar.getInstance().getTimeInMillis();
+
+            String path = pathF + "/MYCAM-";
             file = new File(path+timestamp+".jpg");
 
             ImageReader.OnImageAvailableListener readerListener = new ImageReader.OnImageAvailableListener() {
@@ -267,20 +341,10 @@ public class MainActivity extends AppCompatActivity {
                     }
                     findViewById(R.id.progressBar).setVisibility(View.INVISIBLE);
                     saveBitmapImage(bitmap,imagePath);
-                    Intent imgProcess = new Intent(MainActivity.this,ImageProcess.class)
-                                .putExtra("rootPath",pathF+"/")
-                                .putExtra("imagePath",imagePath);
-                        startActivity(imgProcess);
-
-//                    MaterialAlertDialogBuilder alertDialogBuilder = new MaterialAlertDialogBuilder(MainActivity.this);
-//                    alertDialogBuilder.setMessage("Do you want more processed of this image?");
-//                    alertDialogBuilder.setPositiveButton("Yes", (dialog, which) -> {
-//                        dialog.dismiss();
-//                    });
-//                    alertDialogBuilder.setNegativeButton("No", (dialog, which) -> {
-//                        dialog.dismiss();
-//                    });
-//                    alertDialogBuilder.show();
+                    Intent imgProcess = new Intent(PROActivity.this,ImageProcess.class)
+                            .putExtra("rootPath",pathF+"/")
+                            .putExtra("imagePath",imagePath);
+                    startActivity(imgProcess);
 
 
                 }
@@ -306,7 +370,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onCaptureCompleted(@NonNull CameraCaptureSession session, @NonNull CaptureRequest request, @NonNull TotalCaptureResult result) {
                     super.onCaptureCompleted(session, request, result);
-                    Toast.makeText(MainActivity.this, "Image Saved", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(PROActivity.this, "Image Saved", Toast.LENGTH_SHORT).show();
                     createCameraPreview();
 
 //              finish();
@@ -355,7 +419,7 @@ public class MainActivity extends AppCompatActivity {
 
                 @Override
                 public void onConfigureFailed(@NonNull CameraCaptureSession cameraCaptureSession) {
-                    Toast.makeText(MainActivity.this, "Changed", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(PROActivity.this, "Changed", Toast.LENGTH_SHORT).show();
                 }
             },null);
         } catch (CameraAccessException e) {
@@ -367,8 +431,49 @@ public class MainActivity extends AppCompatActivity {
         if(cameraDevice == null)
             Toast.makeText(this, "Error", Toast.LENGTH_SHORT).show();
         captureRequestBuilder.set(CaptureRequest.CONTROL_MODE,CaptureRequest.CONTROL_MODE_AUTO);
+        //--
+        //ISO,WB,Focal Length control
+        //>> WB
+//        captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_OFF);
+//        RggbChannelVector rgbCV = cctToRGBCV(2765); // 2000(warm) to 100000000(cool)
+//        captureRequestBuilder.set(CaptureRequest.COLOR_CORRECTION_MODE, CaptureRequest.COLOR_CORRECTION_MODE_TRANSFORM_MATRIX);
+//        captureRequestBuilder.set(CaptureRequest.COLOR_CORRECTION_GAINS, rgbCV);
 
+        //>> ISO
+//        Range<Integer> isoRange = characteristics.get(CameraCharacteristics.SENSOR_INFO_SENSITIVITY_RANGE);
+//        int minIso = isoRange.getLower(); // Minimum supported ISO value (100)
+//        int maxIso = isoRange.getUpper(); // Maximum supported ISO value (6400)
+//
+//        captureRequestBuilder.set(CaptureRequest.CONTROL_MODE,CaptureRequest.CONTROL_MODE_OFF);
+//
+//        int isoValue = clamp(100, minIso, maxIso);
+//        captureRequestBuilder.set(CaptureRequest.SENSOR_SENSITIVITY, isoValue);
 
+        //>> FOCUS DISTANCE
+        // Get the minimum and maximum focus distances supported by the camera
+//        float minFocusDistance = characteristics.get(CameraCharacteristics.LENS_INFO_MINIMUM_FOCUS_DISTANCE);//0.33333334
+//        float maxFocusDistance = characteristics.get(CameraCharacteristics.LENS_INFO_HYPERFOCAL_DISTANCE);//20.0
+//
+////        Log.d("FOCUS DISTANCE",maxFocusDistance+" "+minFocusDistance);
+//// Calculate the desired focus distance (between 0.0f and 1.0f)
+//        float desiredFocusDistance =0.5f; // Your desired focus distance between 0.0f and 1.0f
+////good 0.5 to 1.0
+//// Calculate the actual focus distance based on the min and max values
+//        float actualFocusDistance = minFocusDistance + (maxFocusDistance - minFocusDistance) * desiredFocusDistance;
+//
+//// Set the focus distance in the CaptureRequest.Builder
+//        captureRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE,CaptureRequest.CONTROL_AE_MODE_OFF);
+//        captureRequestBuilder.set(CaptureRequest.LENS_FOCUS_DISTANCE, actualFocusDistance);
+
+        //>>AE
+//        Range<Long> exposureTimeRange = characteristics.get(CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE);
+//
+//        long minExposureTime = exposureTimeRange.getLower(); //100000  nanoseconds
+//        long maxExposureTime = exposureTimeRange.getUpper(); //32000000000 nanoseconds
+//        Log.d("FOCUS DISTANCE",minExposureTime+" "+maxExposureTime);
+//        long exposureTime = 500000;
+//        captureRequestBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME,maxExposureTime); // Set the desired exposure time
+        //--
         try{
             cameraCaptureSessions.setRepeatingRequest(captureRequestBuilder.build(),null,mBackgroundHandler);
         } catch (CameraAccessException e) {
@@ -439,48 +544,48 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void openCamera(int camF) {
-    CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
-    try {
-        if (camF==1){
+        CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+        try {
+            if (camF==1){
 
-            String cameraId = manager.getCameraIdList()[0];
-            characteristics = manager.getCameraCharacteristics(cameraId);
-            StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
-            assert map != null;
-            imageDimension = map.getOutputSizes(SurfaceTexture.class)[0];
-            if(ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED)
-            {
-                ActivityCompat.requestPermissions(this,new String[]{
-                        Manifest.permission.CAMERA,
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE
-                },REQUEST_CAMERA_PERMISSION);
-                return;
-            }
-            manager.openCamera(cameraId,stateCallback,null);
-        }
-        else {
-            String[] cameraIds = manager.getCameraIdList();
-            for (String cameraId : cameraIds) {
+                String cameraId = manager.getCameraIdList()[0];
                 CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraId);
-                int cameraFacing = characteristics.get(CameraCharacteristics.LENS_FACING);
-                if (cameraFacing == CameraCharacteristics.LENS_FACING_FRONT) {
-                    // Found front camera
-                    imageDimension = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
-                            .getOutputSizes(SurfaceTexture.class)[0];
-                    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_CAMERA_PERMISSION);
-                        return;
-                    }
-                    manager.openCamera(cameraId, stateCallback, null);
+                StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+                assert map != null;
+                imageDimension = map.getOutputSizes(SurfaceTexture.class)[0];
+                if(ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED)
+                {
+                    ActivityCompat.requestPermissions(this,new String[]{
+                            Manifest.permission.CAMERA,
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE
+                    },REQUEST_CAMERA_PERMISSION);
                     return;
                 }
+                manager.openCamera(cameraId,stateCallback,null);
             }
-        }
+            else {
+                String[] cameraIds = manager.getCameraIdList();
+                for (String cameraId : cameraIds) {
+                    CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraId);
+                    int cameraFacing = characteristics.get(CameraCharacteristics.LENS_FACING);
+                    if (cameraFacing == CameraCharacteristics.LENS_FACING_FRONT) {
+                        // Found front camera
+                        imageDimension = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
+                                .getOutputSizes(SurfaceTexture.class)[0];
+                        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_CAMERA_PERMISSION);
+                            return;
+                        }
+                        manager.openCamera(cameraId, stateCallback, null);
+                        return;
+                    }
+                }
+            }
 
-    } catch (CameraAccessException e) {
-        e.printStackTrace();
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+        }
     }
-}
 
     TextureView.SurfaceTextureListener textureListener = new TextureView.SurfaceTextureListener() {
         @Override

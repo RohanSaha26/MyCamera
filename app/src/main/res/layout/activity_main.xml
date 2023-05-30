@@ -39,16 +39,6 @@
         app:layout_constraintStart_toEndOf="@+id/captureBtn"
         app:layout_constraintTop_toTopOf="@+id/captureBtn" />
 
-<!--    <ProgressBar-->
-<!--        android:id="@+id/progressBar"-->
-<!--        android:layout_width="45dp"-->
-<!--        android:layout_height="45dp"-->
-<!--        app:layout_constraintBottom_toBottomOf="@+id/imgView"-->
-<!--        app:layout_constraintEnd_toEndOf="@+id/imgView"-->
-<!--        app:layout_constraintStart_toStartOf="@+id/imgView"-->
-<!--        app:layout_constraintTop_toTopOf="@+id/imgView"-->
-<!--        android:visibility="visible"/>-->
-
     <com.airbnb.lottie.LottieAnimationView
         android:id="@+id/progressBar"
         android:layout_width="70dp"
@@ -74,6 +64,18 @@
         app:layout_constraintTop_toTopOf="@+id/captureBtn"
         app:layout_constraintVertical_bias="0.75"
         app:srcCompat="@drawable/camflip" />
+
+    <ImageView
+        android:id="@+id/rawOn"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        app:layout_constraintBottom_toTopOf="@+id/galleryBtn"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.894"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/imgView"
+        app:layout_constraintVertical_bias="0.022"
+        app:srcCompat="@drawable/raw_on" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
