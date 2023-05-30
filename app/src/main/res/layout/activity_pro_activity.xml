@@ -239,4 +239,16 @@
         app:layout_constraintStart_toEndOf="@+id/fdSeek"
         app:layout_constraintTop_toTopOf="@+id/fdSeek" />
 
+    <ImageView
+        android:id="@+id/flash"
+        android:layout_width="35dp"
+        android:layout_height="35dp"
+        app:layout_constraintBottom_toBottomOf="@+id/rawOff"
+        app:layout_constraintEnd_toStartOf="@+id/rawOff"
+        app:layout_constraintHorizontal_bias="0.127"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/rawOff"
+        app:layout_constraintVertical_bias="1.0"
+        app:srcCompat="@drawable/flash_on" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

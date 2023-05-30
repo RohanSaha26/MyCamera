@@ -77,5 +77,15 @@
         app:layout_constraintVertical_bias="0.022"
         app:srcCompat="@drawable/raw_on" />
 
-
+    <ImageView
+        android:id="@+id/flash"
+        android:layout_width="35dp"
+        android:layout_height="35dp"
+        app:layout_constraintBottom_toBottomOf="@+id/rawOn"
+        app:layout_constraintEnd_toStartOf="@+id/rawOn"
+        app:layout_constraintHorizontal_bias="0.127"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/rawOn"
+        app:layout_constraintVertical_bias="1.0"
+        app:srcCompat="@drawable/flash_on" />
 </androidx.constraintlayout.widget.ConstraintLayout>

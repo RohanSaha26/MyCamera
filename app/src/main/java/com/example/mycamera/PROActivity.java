@@ -122,6 +122,7 @@ public class PROActivity extends AppCompatActivity {
     String imagePath;
     public Bitmap bitmap;
 
+    boolean flashStatus=false;
     int isoValue,wbValue;
     float fdValue;
     int camFlip; //1 - back , 0 - front
@@ -164,6 +165,20 @@ public class PROActivity extends AppCompatActivity {
         if (!folder.exists()) {
             folder.mkdir();
         }
+        ImageView flash = (ImageView) findViewById(R.id.flash);
+        flash.setOnClickListener(v -> {
+            if (flashStatus==false){
+                toggleFlash();
+                flashStatus=true;
+                flash.setImageResource(R.drawable.flash_off);
+            }
+            else if(flashStatus==true){
+                toggleFlash();
+                flashStatus=false;
+                flash.setImageResource(R.drawable.flash_on);
+            }
+        });
+
 //ISO
         isoSeek= (SeekBar)findViewById(R.id.isoSeek);
         isoVal = (TextView) findViewById(R.id.isoVal);
@@ -333,6 +348,23 @@ public class PROActivity extends AppCompatActivity {
         });
 
     }
+
+    private void toggleFlash() {
+        flashStatus = !flashStatus;
+
+        try {
+            if (flashStatus) {
+                captureRequestBuilder.set(CaptureRequest.FLASH_MODE, CameraMetadata.FLASH_MODE_TORCH);
+            } else {
+                captureRequestBuilder.set(CaptureRequest.FLASH_MODE, CameraMetadata.FLASH_MODE_OFF);
+            }
+            CaptureRequest previewRequest = captureRequestBuilder.build();
+            cameraCaptureSessions.setRepeatingRequest(previewRequest, null, null);
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+        }
+    }
+
     //pass raw arguments by this function
     private void takePicture() {
 
@@ -380,13 +412,6 @@ public class PROActivity extends AppCompatActivity {
                     buffer.get(bytes);
                     bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
                     imagePath = path+timestamp+"-RAW.jpg";
-                    if (camFlip==0){
-                        Matrix matrix = new Matrix();
-                        matrix.postRotate(180);
-                        matrix.postScale(-1, 1);
-                        Bitmap bitmap2 = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, false);
-                        bitmap = bitmap2;
-                    }
                     findViewById(R.id.progressBar).setVisibility(View.INVISIBLE);
                     Bitmap bitmapTexture = textureView.getBitmap();
                     Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmapTexture, 2160, 3840, true);
@@ -426,8 +451,6 @@ public class PROActivity extends AppCompatActivity {
                     startActivity(imgProcess);
                     Toast.makeText(PROActivity.this, "Image Saved", Toast.LENGTH_SHORT).show();
                     createCameraPreview();
-
-//              finish();
                 }
             };
 
@@ -487,48 +510,6 @@ public class PROActivity extends AppCompatActivity {
             Toast.makeText(this, "Error", Toast.LENGTH_SHORT).show();
         captureRequestBuilder.set(CaptureRequest.CONTROL_MODE,CaptureRequest.CONTROL_MODE_AUTO);
         //--
-        //ISO,WB,Focal Length control
-        //>> WB
-//        captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_AUTO);
-//        captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_OFF);
-//
-//        captureRequestBuilder.set(CaptureRequest.COLOR_CORRECTION_MODE, CaptureRequest.COLOR_CORRECTION_MODE_TRANSFORM_MATRIX);
-//        captureRequestBuilder.set(CaptureRequest.COLOR_CORRECTION_GAINS, cctToRGBCV(2000));
-
-        //>> ISO
-//        Range<Integer> isoRange = characteristics.get(CameraCharacteristics.SENSOR_INFO_SENSITIVITY_RANGE);
-//        int minIso = isoRange.getLower(); // Minimum supported ISO value (100)
-//        int maxIso = isoRange.getUpper(); // Maximum supported ISO value (6400)
-//
-//        captureRequestBuilder.set(CaptureRequest.CONTROL_MODE,CaptureRequest.CONTROL_MODE_OFF);
-//
-//        int isoValue = clamp(100, minIso, maxIso);
-//        captureRequestBuilder.set(CaptureRequest.SENSOR_SENSITIVITY, isoValue);
-
-        //>> FOCUS DISTANCE
-        // Get the minimum and maximum focus distances supported by the camera
-//        float minFocusDistance = characteristics.get(CameraCharacteristics.LENS_INFO_MINIMUM_FOCUS_DISTANCE);//0.33333334
-//        float maxFocusDistance = characteristics.get(CameraCharacteristics.LENS_INFO_HYPERFOCAL_DISTANCE);//20.0
-//
-////        Log.d("FOCUS DISTANCE",maxFocusDistance+" "+minFocusDistance);
-//// Calculate the desired focus distance (between 0.0f and 1.0f)
-//        float desiredFocusDistance =0.5f; // Your desired focus distance between 0.0f and 1.0f
-////good 0.5 to 1.0
-//// Calculate the actual focus distance based on the min and max values
-//        float actualFocusDistance = minFocusDistance + (maxFocusDistance - minFocusDistance) * desiredFocusDistance;
-//
-//// Set the focus distance in the CaptureRequest.Builder
-//        captureRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE,CaptureRequest.CONTROL_AE_MODE_OFF);
-//        captureRequestBuilder.set(CaptureRequest.LENS_FOCUS_DISTANCE, actualFocusDistance);
-
-        //>>AE
-//        Range<Long> exposureTimeRange = characteristics.get(CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE);
-//
-//        long minExposureTime = exposureTimeRange.getLower(); //100000  nanoseconds
-//        long maxExposureTime = exposureTimeRange.getUpper(); //32000000000 nanoseconds
-//        Log.d("FOCUS DISTANCE",minExposureTime+" "+maxExposureTime);
-//        long exposureTime = 500000;
-//        captureRequestBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME,maxExposureTime); // Set the desired exposure time
         //--
         try{
             cameraCaptureSessions.setRepeatingRequest(captureRequestBuilder.build(),null,mBackgroundHandler);

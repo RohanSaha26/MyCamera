@@ -130,6 +130,7 @@ public class MainActivity extends AppCompatActivity {
     private int isoVal;
     private float focusVal;
     public Bitmap bitmap,bitmap1;
+    boolean flashStatus=false;
     int camFlip; //1 - back , 0 - front
 
     PrintHelper printHelper = new PrintHelper(this);
@@ -165,7 +166,19 @@ public class MainActivity extends AppCompatActivity {
         if (!folder.exists()) {
             folder.mkdir();
         }
-
+        ImageView flash = (ImageView) findViewById(R.id.flash);
+        flash.setOnClickListener(v -> {
+            if (flashStatus==false){
+                toggleFlash();
+                flashStatus=true;
+                flash.setImageResource(R.drawable.flash_off);
+            }
+            else if(flashStatus==true){
+                toggleFlash();
+                flashStatus=false;
+                flash.setImageResource(R.drawable.flash_on);
+            }
+        });
 
         findViewById(R.id.rawOn).setOnClickListener(v -> {
             Intent rowModeON;
@@ -208,7 +221,25 @@ public class MainActivity extends AppCompatActivity {
         });
 
     }
-//pass raw arguments by this function
+
+    private void toggleFlash() {
+        flashStatus = !flashStatus;
+
+        try {
+            if (flashStatus) {
+                captureRequestBuilder.set(CaptureRequest.FLASH_MODE, CameraMetadata.FLASH_MODE_TORCH);
+            } else {
+                captureRequestBuilder.set(CaptureRequest.FLASH_MODE, CameraMetadata.FLASH_MODE_OFF);
+            }
+            CaptureRequest previewRequest = captureRequestBuilder.build();
+            cameraCaptureSessions.setRepeatingRequest(previewRequest, null, null);
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    //pass raw arguments by this function
     private void takePicture() {
 
         findViewById(R.id.progressBar).setVisibility(View.VISIBLE);
@@ -268,18 +299,6 @@ public class MainActivity extends AppCompatActivity {
                     }
                     findViewById(R.id.progressBar).setVisibility(View.INVISIBLE);
                     saveBitmapImage(bitmap,imagePath);
-
-//                    MaterialAlertDialogBuilder alertDialogBuilder = new MaterialAlertDialogBuilder(MainActivity.this);
-//                    alertDialogBuilder.setMessage("Do you want more processed of this image?");
-//                    alertDialogBuilder.setPositiveButton("Yes", (dialog, which) -> {
-//                        dialog.dismiss();
-//                    });
-//                    alertDialogBuilder.setNegativeButton("No", (dialog, which) -> {
-//                        dialog.dismiss();
-//                    });
-//                    alertDialogBuilder.show();
-
-
                 }
 
                 private void saveBitmapImage(Bitmap bitmap,String path) {
@@ -386,68 +405,6 @@ public class MainActivity extends AppCompatActivity {
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }
-    }
-
-    private RggbChannelVector cctToRGBCV(int cct) {
-        // Calculate the R, G, and B gains based on the CCT
-        float redGain, greenGain, blueGain;
-
-// Calculate red gain
-        float temperature = cct / 100.0f;
-        if (temperature <= 66) {
-            redGain = 255;
-        } else {
-            redGain = temperature - 60;
-            redGain = (float) (329.698727446 * Math.pow(redGain, -0.1332047592));
-            if (redGain < 0) {
-                redGain = 0;
-            } else if (redGain > 255) {
-                redGain = 255;
-            }
-        }
-
-// Calculate green gain
-        if (temperature <= 66) {
-            greenGain = temperature;
-            greenGain = (float) (99.4708025861 * Math.log(greenGain) - 161.1195681661);
-            if (greenGain < 0) {
-                greenGain = 0;
-            } else if (greenGain > 255) {
-                greenGain = 255;
-            }
-        } else {
-            greenGain = temperature - 60;
-            greenGain = (float) (288.1221695283 * Math.pow(greenGain, -0.0755148492));
-            if (greenGain < 0) {
-                greenGain = 0;
-            } else if (greenGain > 255) {
-                greenGain = 255;
-            }
-        }
-
-// Calculate blue gain
-        if (temperature >= 66) {
-            blueGain = 255;
-        } else if (temperature <= 19) {
-            blueGain = 0;
-        } else {
-            blueGain = temperature - 10;
-            blueGain = (float) (138.5177312231 * Math.log(blueGain) - 305.0447927307);
-            if (blueGain < 0) {
-                blueGain = 0;
-            } else if (blueGain > 255) {
-                blueGain = 255;
-            }
-        }
-
-// Create the RggbChannelVector with the calculated gains
-        RggbChannelVector rggbChannelVector = new RggbChannelVector(
-                redGain / 255.0f,
-                greenGain / 255.0f,
-                greenGain / 255.0f,
-                blueGain / 255.0f
-        );
-        return  rggbChannelVector;
     }
 
     private void openCamera(int camF) {

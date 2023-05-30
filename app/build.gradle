@@ -11,8 +11,8 @@ android {
         applicationId "com.example.mycamera"
         minSdk 21
         targetSdk 33
-        versionCode 1
-        versionName "1.0"
+        versionCode 23
+        versionName "23.05.31"
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
