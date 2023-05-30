@@ -126,6 +126,7 @@ public class MainActivity extends AppCompatActivity {
     private HandlerThread mBackgroundThread;
 
     String pathF = Environment.getExternalStorageDirectory()+"/DCIM/MyCamera";
+    String imagePath;
     private int isoVal;
     private float focusVal;
     public Bitmap bitmap,bitmap1;
@@ -257,7 +258,7 @@ public class MainActivity extends AppCompatActivity {
                     byte[] bytes = new byte[buffer.capacity()];
                     buffer.get(bytes);
                     bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                    String imagePath = path+timestamp+".jpg";
+                    imagePath = path+timestamp+".jpg";
                     if (camFlip==0){
                         Matrix matrix = new Matrix();
                         matrix.postRotate(180);
@@ -267,10 +268,6 @@ public class MainActivity extends AppCompatActivity {
                     }
                     findViewById(R.id.progressBar).setVisibility(View.INVISIBLE);
                     saveBitmapImage(bitmap,imagePath);
-                    Intent imgProcess = new Intent(MainActivity.this,ImageProcess.class)
-                                .putExtra("rootPath",pathF+"/")
-                                .putExtra("imagePath",imagePath);
-                        startActivity(imgProcess);
 
 //                    MaterialAlertDialogBuilder alertDialogBuilder = new MaterialAlertDialogBuilder(MainActivity.this);
 //                    alertDialogBuilder.setMessage("Do you want more processed of this image?");
@@ -306,7 +303,22 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onCaptureCompleted(@NonNull CameraCaptureSession session, @NonNull CaptureRequest request, @NonNull TotalCaptureResult result) {
                     super.onCaptureCompleted(session, request, result);
+
                     Toast.makeText(MainActivity.this, "Image Saved", Toast.LENGTH_SHORT).show();
+                    Intent imgProcess = new Intent(MainActivity.this,ImageProcess.class)
+                            .putExtra("rootPath",pathF+"/")
+                            .putExtra("imagePath",imagePath);
+                    startActivity(imgProcess);
+
+//                    MaterialAlertDialogBuilder alertDialogBuilder = new MaterialAlertDialogBuilder(MainActivity.this);
+//                    alertDialogBuilder.setMessage("Do you want more processed of this image?");
+//                    alertDialogBuilder.setPositiveButton("Yes", (dialog, which) -> {
+//                        dialog.dismiss();
+//                    });
+//                    alertDialogBuilder.setNegativeButton("No", (dialog, which) -> {
+//                        dialog.dismiss();
+//                    });
+//                    alertDialogBuilder.show();
                     createCameraPreview();
 
 //              finish();

@@ -40,6 +40,7 @@ import android.os.HandlerThread;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.util.Range;
 import android.util.Size;
 import android.util.SparseIntArray;
 import android.view.Surface;
@@ -85,9 +86,11 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 
@@ -108,6 +111,7 @@ public class PROActivity extends AppCompatActivity {
     private CameraCaptureSession cameraCaptureSessions;
     private CaptureRequest.Builder captureRequestBuilder;
     private android.util.Size imageDimension;
+    CameraCharacteristics characteristics;
     //Save to FILE
     private File file;
     private static final int REQUEST_CAMERA_PERMISSION = 200;
@@ -115,11 +119,17 @@ public class PROActivity extends AppCompatActivity {
     private HandlerThread mBackgroundThread;
 
     String pathF = Environment.getExternalStorageDirectory()+"/DCIM/MyCamera";
-    public Bitmap bitmap,bitmap1;
+    String imagePath;
+    public Bitmap bitmap;
 
     int isoValue,wbValue;
-    float aeValue,fdValue;
+    float fdValue;
     int camFlip; //1 - back , 0 - front
+    int currentWBValue = 5000;//2000-10000
+    int currentISOValue = 3250;//100-6400
+    float currentFDValue = 1.0f;//0.0 - 1.0
+    SeekBar isoSeek,wbSeek,fdSeek;
+    TextView isoVal,wbVal,fdVal;
 
     PrintHelper printHelper = new PrintHelper(this);
 
@@ -155,13 +165,29 @@ public class PROActivity extends AppCompatActivity {
             folder.mkdir();
         }
 //ISO
-        SeekBar isoSeek= (SeekBar)findViewById(R.id.isoSeek);
-        TextView isoVal = (TextView) findViewById(R.id.isoVal);
+        isoSeek= (SeekBar)findViewById(R.id.isoSeek);
+        isoVal = (TextView) findViewById(R.id.isoVal);
         isoSeek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 isoValue = progress;
                 isoVal.setText(progress+"");
+                if (isoValue != currentISOValue) {
+                    Range<Integer> isoRange = characteristics.get(CameraCharacteristics.SENSOR_INFO_SENSITIVITY_RANGE);
+                    captureRequestBuilder.set(CaptureRequest.CONTROL_MODE,CaptureRequest.CONTROL_MODE_OFF);
+                    captureRequestBuilder.set(CaptureRequest.SENSOR_SENSITIVITY, isoValue);
+                    float minFocusDistance = characteristics.get(CameraCharacteristics.LENS_INFO_MINIMUM_FOCUS_DISTANCE);//0.33333334
+                    float maxFocusDistance = characteristics.get(CameraCharacteristics.LENS_INFO_HYPERFOCAL_DISTANCE);//20.0
+                    float actualFocusDistance = minFocusDistance + (maxFocusDistance - minFocusDistance) * (.8F); //0<fdValue<100 converted to 0.0f to 1.0f
+                    captureRequestBuilder.set(CaptureRequest.LENS_FOCUS_DISTANCE, actualFocusDistance);
+
+                    try {
+                        cameraCaptureSessions.setRepeatingRequest(captureRequestBuilder.build(), null, null);
+                    } catch (CameraAccessException e) {
+                        e.printStackTrace();
+                    }
+                    currentISOValue = isoValue;
+                }
             }
 
             @Override
@@ -175,13 +201,27 @@ public class PROActivity extends AppCompatActivity {
             }
         });
 //WB
-        SeekBar wbSeek= (SeekBar)findViewById(R.id.wbSeek);
-        TextView wbVal = (TextView) findViewById(R.id.wbVal);
+        wbSeek= (SeekBar)findViewById(R.id.wbSeek);
+        wbVal = (TextView) findViewById(R.id.wbVal);
+        wbVal.setText(currentWBValue+"");
+        wbSeek.setProgress(currentWBValue);
         wbSeek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 wbValue = progress;
                 wbVal.setText(progress+"");
+                if (wbValue != currentWBValue) {
+                    captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_OFF);
+                    RggbChannelVector rgbCV = cctToRGBCV(wbValue); // 2000(warm) to 10000(cool)
+                    captureRequestBuilder.set(CaptureRequest.COLOR_CORRECTION_MODE, CaptureRequest.COLOR_CORRECTION_MODE_TRANSFORM_MATRIX);
+                    captureRequestBuilder.set(CaptureRequest.COLOR_CORRECTION_GAINS, rgbCV);
+                    try {
+                        cameraCaptureSessions.setRepeatingRequest(captureRequestBuilder.build(), null, null);
+                    } catch (CameraAccessException e) {
+                        e.printStackTrace();
+                    }
+                    currentWBValue = wbValue;
+                }
             }
 
             @Override
@@ -194,34 +234,50 @@ public class PROActivity extends AppCompatActivity {
 
             }
         });
-//AE
-        SeekBar aeSeek= (SeekBar)findViewById(R.id.aeSeek);
-        TextView aeVal = (TextView) findViewById(R.id.aeVal);
-        aeSeek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                aeValue = progress;
-                aeVal.setText(progress+"");
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
-            }
-        });
+////AE
+//        SeekBar aeSeek= (SeekBar)findViewById(R.id.aeSeek);
+//        TextView aeVal = (TextView) findViewById(R.id.aeVal);
+//        aeSeek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+//            @Override
+//            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+//                aeValue = progress;
+//                aeVal.setText(progress+"");
+//            }
+//
+//            @Override
+//            public void onStartTrackingTouch(SeekBar seekBar) {
+//
+//            }
+//
+//            @Override
+//            public void onStopTrackingTouch(SeekBar seekBar) {
+//
+//            }
+//        });
 //FD
-        SeekBar fdSeek= (SeekBar)findViewById(R.id.fdSeek);
-        TextView fdVal = (TextView) findViewById(R.id.fdVal);
+        fdSeek = (SeekBar)findViewById(R.id.fdSeek);
+        fdVal = (TextView) findViewById(R.id.fdVal);
+        fdSeek.setProgress(100);
+        fdVal.setText(currentFDValue+"");
         fdSeek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                fdValue = progress;
-                fdVal.setText(progress+"");
+                fdValue = progress/100.0F;
+                fdVal.setText(String.valueOf(fdValue));
+                if (fdValue != currentFDValue) {
+                    float minFocusDistance = characteristics.get(CameraCharacteristics.LENS_INFO_MINIMUM_FOCUS_DISTANCE);//0.33333334
+                    float maxFocusDistance = characteristics.get(CameraCharacteristics.LENS_INFO_HYPERFOCAL_DISTANCE);//20.0
+                    float actualFocusDistance = minFocusDistance + (maxFocusDistance - minFocusDistance) * (fdValue); //0<fdValue<100 converted to 0.0f to 1.0f
+                    captureRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE,CaptureRequest.CONTROL_AF_MODE_OFF);
+                    captureRequestBuilder.set(CaptureRequest.LENS_FOCUS_DISTANCE, actualFocusDistance);
+                    try {
+                        cameraCaptureSessions.setRepeatingRequest(captureRequestBuilder.build(), null, null);
+                    } catch (CameraAccessException e) {
+                        e.printStackTrace();
+                    }
+                    currentFDValue = fdValue;
+                }
+
             }
 
             @Override
@@ -235,10 +291,6 @@ public class PROActivity extends AppCompatActivity {
             }
         });
 
-        Button applyRAW = findViewById(R.id.applyRAW);
-        applyRAW.setOnClickListener(v -> {
-            //Click on apply
-        });
         findViewById(R.id.rawOff).setOnClickListener(v -> {
             Intent rowModeFF;
             rowModeFF  = new Intent(PROActivity.this,MainActivity.class);
@@ -317,21 +369,17 @@ public class PROActivity extends AppCompatActivity {
             //Check orientation base on device
             int rotation = getWindowManager().getDefaultDisplay().getRotation();
             captureBuilder.set(CaptureRequest.JPEG_ORIENTATION,ORIENTATIONS.get(rotation));
-            long timestamp = Calendar.getInstance().getTimeInMillis();
-
+            String timestamp = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss").format(new Date());
             String path = pathF + "/MYCAM-";
-            file = new File(path+timestamp+".jpg");
-
             ImageReader.OnImageAvailableListener readerListener = new ImageReader.OnImageAvailableListener() {
                 @Override
                 public void onImageAvailable(ImageReader imageReader) {
-                    Image image = null;
-                    image = reader.acquireLatestImage();
+                    Image image = imageReader.acquireLatestImage();
                     ByteBuffer buffer = image.getPlanes()[0].getBuffer();
                     byte[] bytes = new byte[buffer.capacity()];
                     buffer.get(bytes);
                     bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                    String imagePath = path+timestamp+".jpg";
+                    imagePath = path+timestamp+"-RAW.jpg";
                     if (camFlip==0){
                         Matrix matrix = new Matrix();
                         matrix.postRotate(180);
@@ -340,14 +388,12 @@ public class PROActivity extends AppCompatActivity {
                         bitmap = bitmap2;
                     }
                     findViewById(R.id.progressBar).setVisibility(View.INVISIBLE);
-                    saveBitmapImage(bitmap,imagePath);
-                    Intent imgProcess = new Intent(PROActivity.this,ImageProcess.class)
-                            .putExtra("rootPath",pathF+"/")
-                            .putExtra("imagePath",imagePath);
-                    startActivity(imgProcess);
-
+                    Bitmap bitmapTexture = textureView.getBitmap();
+                    Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmapTexture, 2160, 3840, true);
+                    saveBitmapImage(resizedBitmap,imagePath);
 
                 }
+
 
                 private void saveBitmapImage(Bitmap bitmap,String path) {
                     OutputStream fos;
@@ -370,6 +416,14 @@ public class PROActivity extends AppCompatActivity {
                 @Override
                 public void onCaptureCompleted(@NonNull CameraCaptureSession session, @NonNull CaptureRequest request, @NonNull TotalCaptureResult result) {
                     super.onCaptureCompleted(session, request, result);
+                    fdSeek.setProgress(100);
+                    currentWBValue = 5000;
+                    currentISOValue = 3250;
+                    currentFDValue = 1.0f;
+                    Intent imgProcess = new Intent(PROActivity.this,ImageProcess.class)
+                            .putExtra("rootPath",pathF+"/")
+                            .putExtra("imagePath",imagePath);
+                    startActivity(imgProcess);
                     Toast.makeText(PROActivity.this, "Image Saved", Toast.LENGTH_SHORT).show();
                     createCameraPreview();
 
@@ -406,6 +460,7 @@ public class PROActivity extends AppCompatActivity {
             texture.setDefaultBufferSize(imageDimension.getWidth(),imageDimension.getHeight());
             Surface surface = new Surface(texture);
             captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+            // Add the white balance control
             captureRequestBuilder.addTarget(surface);
             cameraDevice.createCaptureSession(Arrays.asList(surface), new CameraCaptureSession.StateCallback() {
                 @Override
@@ -434,10 +489,11 @@ public class PROActivity extends AppCompatActivity {
         //--
         //ISO,WB,Focal Length control
         //>> WB
+//        captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_AUTO);
 //        captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_OFF);
-//        RggbChannelVector rgbCV = cctToRGBCV(2765); // 2000(warm) to 100000000(cool)
+//
 //        captureRequestBuilder.set(CaptureRequest.COLOR_CORRECTION_MODE, CaptureRequest.COLOR_CORRECTION_MODE_TRANSFORM_MATRIX);
-//        captureRequestBuilder.set(CaptureRequest.COLOR_CORRECTION_GAINS, rgbCV);
+//        captureRequestBuilder.set(CaptureRequest.COLOR_CORRECTION_GAINS, cctToRGBCV(2000));
 
         //>> ISO
 //        Range<Integer> isoRange = characteristics.get(CameraCharacteristics.SENSOR_INFO_SENSITIVITY_RANGE);
@@ -482,65 +538,56 @@ public class PROActivity extends AppCompatActivity {
     }
 
     private RggbChannelVector cctToRGBCV(int cct) {
-        // Calculate the R, G, and B gains based on the CCT
-        float redGain, greenGain, blueGain;
+        double temp = cct / 100.0;
 
-// Calculate red gain
-        float temperature = cct / 100.0f;
-        if (temperature <= 66) {
-            redGain = 255;
+        // Red
+        double red;
+        if (temp <= 66) {
+            red = 255;
         } else {
-            redGain = temperature - 60;
-            redGain = (float) (329.698727446 * Math.pow(redGain, -0.1332047592));
-            if (redGain < 0) {
-                redGain = 0;
-            } else if (redGain > 255) {
-                redGain = 255;
-            }
+            red = 329.698727446 * Math.pow(temp - 60, -0.1332047592);
+            red = Math.max(0, Math.min(255, red));
         }
 
-// Calculate green gain
-        if (temperature <= 66) {
-            greenGain = temperature;
-            greenGain = (float) (99.4708025861 * Math.log(greenGain) - 161.1195681661);
-            if (greenGain < 0) {
-                greenGain = 0;
-            } else if (greenGain > 255) {
-                greenGain = 255;
-            }
+        // Green
+        double green;
+        if (temp <= 66) {
+            green = 99.4708025861 * Math.log(temp) - 161.1195681661;
+            green = Math.max(0, Math.min(255, green));
         } else {
-            greenGain = temperature - 60;
-            greenGain = (float) (288.1221695283 * Math.pow(greenGain, -0.0755148492));
-            if (greenGain < 0) {
-                greenGain = 0;
-            } else if (greenGain > 255) {
-                greenGain = 255;
-            }
+            green = 288.1221695283 * Math.pow(temp - 60, -0.0755148492);
+            green = Math.max(0, Math.min(255, green));
         }
 
-// Calculate blue gain
-        if (temperature >= 66) {
-            blueGain = 255;
-        } else if (temperature <= 19) {
-            blueGain = 0;
+        // Blue
+        double blue;
+        if (temp >= 66) {
+            blue = 255;
+        } else if (temp <= 19) {
+            blue = 0;
         } else {
-            blueGain = temperature - 10;
-            blueGain = (float) (138.5177312231 * Math.log(blueGain) - 305.0447927307);
-            if (blueGain < 0) {
-                blueGain = 0;
-            } else if (blueGain > 255) {
-                blueGain = 255;
-            }
+            blue = 138.5177312231 * Math.log(temp - 10) - 305.0447927307;
+            blue = Math.max(0, Math.min(255, blue));
         }
 
-// Create the RggbChannelVector with the calculated gains
-        RggbChannelVector rggbChannelVector = new RggbChannelVector(
-                redGain / 255.0f,
-                greenGain / 255.0f,
-                greenGain / 255.0f,
-                blueGain / 255.0f
-        );
-        return  rggbChannelVector;
+        // Calculate scale factor
+        double sum = red + green + blue;
+        double scaleFactor = sum > 0 ? 255 / sum : 0;
+
+        // Apply scale factor
+        red *= scaleFactor;
+        green *= scaleFactor;
+        blue *= scaleFactor;
+
+        // Convert RGB to RggbChannelVector
+        float redFloat = (float) (red / 255.0);
+        float greenFloat = (float) (green / 255.0);
+        float blueFloat = (float) (blue / 255.0);
+
+        float redEdge = redFloat / (redFloat + greenFloat + blueFloat);
+        float greenEdge = greenFloat / (redFloat + greenFloat + blueFloat);
+
+        return new RggbChannelVector(redEdge, greenEdge, greenEdge, blueFloat);
     }
 
     private void openCamera(int camF) {
@@ -549,7 +596,7 @@ public class PROActivity extends AppCompatActivity {
             if (camF==1){
 
                 String cameraId = manager.getCameraIdList()[0];
-                CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraId);
+                characteristics = manager.getCameraCharacteristics(cameraId);
                 StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
                 assert map != null;
                 imageDimension = map.getOutputSizes(SurfaceTexture.class)[0];
