@@ -2,7 +2,10 @@ package com.example.mycamera;
 
 import static org.opencv.core.CvType.CV_32F;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.ContentResolver;
 import android.content.ContentUris;
@@ -16,12 +19,16 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.airbnb.lottie.LottieAnimationView;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import org.opencv.android.Utils;
@@ -36,16 +43,23 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class ImageProcess extends AppCompatActivity {
 
-    CheckBox cR,cG,cB,cGr,cGrn,cCn,cSharp,cReti,cCLAHE,cLap,cBlur,cS2;
+    private RecyclerView checkListRecyclerView;
+    private CheckListAdapter checkListAdapter;
+    String[] checkListArray = {"Red","Green","Blue","Grayscale","Black White Negative","Color Negative",
+    "Median Blur","Sharp Image","CLAHE","Laplacian","HDR Effect"};
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_image_process);
-
+        setContentView(R.layout.activity_image_process_new);
+        LottieAnimationView load = (LottieAnimationView) findViewById(R.id.progressBar);
+        load.setVisibility(View.INVISIBLE);
         Intent intent = getIntent();
         String pathF = intent.getStringExtra("rootPath");
         String imagePath = intent.getStringExtra("imagePath");
@@ -59,18 +73,15 @@ public class ImageProcess extends AppCompatActivity {
             p = p + parts[i]+" >";
         }
         p = p + fileNameWithoutExtension;
-        cR = findViewById(R.id.saveRed);
-        cG = findViewById(R.id.saveGreen);
-        cB = findViewById(R.id.saveBlue);
-        cGr = findViewById(R.id.saveGrayscale);
-        cGrn = findViewById(R.id.saveNegativeBW);
-        cCn = findViewById(R.id.saveNegativeColor);
-        cSharp = findViewById(R.id.saveSharpimage);
-        cReti = findViewById(R.id.saveRetinex);
-        cCLAHE = findViewById(R.id.saveClahe);
-        cLap = findViewById(R.id.saveLaplacian);
-        cBlur = findViewById(R.id.saveMedianBlur);
-        cS2 = findViewById(R.id.saveSaturated);
+
+        //----
+        checkListRecyclerView = findViewById(R.id.checkList);
+        checkListAdapter = new CheckListAdapter(checkListArray);
+
+        checkListRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        checkListRecyclerView.setAdapter(checkListAdapter);
+
+        //----
         TextView pathroot = (TextView)findViewById(R.id.pathRoot);
         pathroot.setText(p);
 
@@ -79,28 +90,37 @@ public class ImageProcess extends AppCompatActivity {
 
         ImageView imgprocessView = (ImageView) findViewById(R.id.imgProcessView);
         imgprocessView.setImageBitmap(bitmap);
+        imgprocessView.setOnClickListener(v -> {
+           Intent imgViewer = new Intent(ImageProcess.this, ImageViewerActivity.class);
+           imgViewer.putExtra("image",imagePath);
+           startActivity(imgViewer);
+        });
+
         findViewById(R.id.saveImg).setOnClickListener(v -> {
+            load.setVisibility(View.VISIBLE);
+            int[] arr = checkListAdapter.getSelectedItemsArray();
+            Log.d("CheckListArray", Arrays.toString(arr));
 
-
-            if(!(cR.isChecked()||cG.isChecked()||cB.isChecked()||cGr.isChecked()||cGrn.isChecked()||cCn.isChecked()||cS2.isChecked()||
-                    cBlur.isChecked()||cSharp.isChecked()||cLap.isChecked()|| cCLAHE.isChecked()))
-            {
+            if (isAllZero(arr)) {
                 Toast.makeText(this,"Select any checkbox to save.",Toast.LENGTH_SHORT).show();
             }
-            else
-            {
+            else {
                 File folder = new File(path);
                 if (!folder.exists()) {
                     folder.mkdir();
                 };
-                if(cR.isChecked()||cG.isChecked()||cB.isChecked()||cGr.isChecked()||cGrn.isChecked()||cCn.isChecked()||cS2.isChecked()){
+                Mat mat = new Mat();
+                Utils.bitmapToMat(bitmap, mat);
+                org.opencv.core.Size kernelSize7 = new org.opencv.core.Size(7,7);
+                int k = 9;
+                if (isOne(arr,0)||isOne(arr,1)||isOne(arr,2)
+                        ||isOne(arr,3)||isOne(arr,4)||isOne(arr,5)){
                     Bitmap redB = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
                     Bitmap greenB = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
                     Bitmap blueB = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
                     Bitmap grayScaleB = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
                     Bitmap negGrayScaleB = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
                     Bitmap negColorB = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-                    Bitmap saturatedB = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
                     for (int y = 0; y < height; y++) {
                         for (int x = 0; x < width; x++) {
                             int pixel = bitmap.getPixel(x, y);
@@ -114,58 +134,47 @@ public class ImageProcess extends AppCompatActivity {
                             grayScaleB.setPixel(x, y, Color.rgb(gray, gray, gray));
                             negGrayScaleB.setPixel(x, y, Color.rgb(255 - gray, 255 - gray, 255 - gray));
                             negColorB.setPixel(x, y, Color.rgb(255-red, 255-green, 255-blue));
-
-                            //Saturated
                             float[] hsv = new float[3];
                             Color.RGBToHSV(red, green, blue, hsv);
-                            //hsv[0] => hue ; hsv[1] => saturation ; hue[2] => value
-                            float hue = hsv[0],saturation = hsv[1], value = hsv[2];
-//                                hue*=2;saturation *= 2;value*=2;
-                            saturation*=2;
-                            hsv[0] = hue ; hsv[1] = saturation ; hsv[2] = value;
+                            float saturation = hsv[1];
+                            saturation*=1.3F;
+                            hsv[1] = saturation;
                             int color = Color.HSVToColor(hsv);
-                            saturatedB.setPixel(x, y, Color.rgb(Color.red(color), Color.green(color), Color.blue(color)));
-
                         }
                     }
-                    if (cR.isChecked())
+                    if (isOne(arr,0)) //RED
                         saveBitmapImage(redB,path+"/"+fileNameWithoutExtension+"-red.jpg");
-                    if (cG.isChecked())
+                    if (isOne(arr,1)) //GREEN
                         saveBitmapImage(greenB,path+"/"+fileNameWithoutExtension+"-greenB.jpg");
-                    if (cB.isChecked())
+                    if (isOne(arr,2)) //BLUE
                         saveBitmapImage(blueB,path+"/"+fileNameWithoutExtension+"-blue.jpg");
-                    if (cGr.isChecked())
+                    if (isOne(arr,3)) //GRAYSCALE
                         saveBitmapImage(grayScaleB,path+"/"+fileNameWithoutExtension+"-bw.jpg");
-                    if (cGrn.isChecked())
+                    if (isOne(arr,4)) //BLACKWHITE NEGATIVE
                         saveBitmapImage(negGrayScaleB,path+"/"+fileNameWithoutExtension+"-bw-negative.jpg");
-                    if (cCn.isChecked())
+                    if (isOne(arr,5))//COLOR NEGATIVE
                         saveBitmapImage(negColorB,path+"/"+fileNameWithoutExtension+"-col-negative.jpg");
-                    if (cS2.isChecked())
-                        saveBitmapImage(saturatedB,path+"/"+fileNameWithoutExtension+"-saturatedX2.jpg");
-
                 }
-                Mat mat = new Mat();
-                Utils.bitmapToMat(bitmap, mat);
-                org.opencv.core.Size kernelSize7 = new org.opencv.core.Size(7,7);
-                if (cBlur.isChecked()) {//MEDIAN BLUR
-                    int k = 9;
-                    Mat clearedMat = new Mat();
-                    Imgproc.medianBlur(mat,clearedMat,k);
+                if (isOne(arr,6)){
+                    Mat blur  = new Mat();
+                    Imgproc.medianBlur(mat,blur,k);
                     Bitmap blB = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-                    Utils.matToBitmap(clearedMat, blB);
+                    Utils.matToBitmap(blur, blB);
                     saveBitmapImage(blB,path+"/"+fileNameWithoutExtension+"-blur.jpg");
-                }
-                if (cSharp.isChecked()){//SHARPENED
-                    Mat gaussMat = new Mat();
-                    Mat sharped = new Mat();
-                    Imgproc.GaussianBlur(mat, gaussMat, kernelSize7, 0);
-                    Core.addWeighted(mat,5.5,gaussMat,-4.5,0,sharped);
+                }//MEDIAN BLUR
+                if (isOne(arr,7)){
                     Bitmap sharpB = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-                    Utils.matToBitmap(sharped, sharpB);
+                    Mat sharp = sharpening(mat,5);
+                    Utils.matToBitmap(sharp, sharpB);
                     saveBitmapImage(sharpB,path+"/"+fileNameWithoutExtension+"-sharpened.jpg");
-
-                }
-                if(cLap.isChecked()){//LAPLACIAN
+                }//SHARPENING
+                if (isOne(arr,8)){
+                    Mat clahe = applyCLAHE(mat,10);
+                    Bitmap claheB = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+                    Utils.matToBitmap(clahe, claheB);
+                    saveBitmapImage(claheB,path+"/"+fileNameWithoutExtension+"-CLAHE.jpg");
+                }//CLAHE
+                if (isOne(arr,9)){
                     Mat laplas = new Mat();
                     Mat grayImage = new Mat();
                     Mat laplacianImage = new Mat();
@@ -176,17 +185,16 @@ public class ImageProcess extends AppCompatActivity {
                     Bitmap lapB = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
                     Utils.matToBitmap(laplas, lapB);
                     saveBitmapImage(lapB,path+"/"+fileNameWithoutExtension+"-laplas.jpg");
-                }
-                if (cCLAHE.isChecked()){//CLAHE
-                    Mat claheMat = applyCLAHE(mat);
-                    Bitmap claheB = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-                    Utils.matToBitmap(claheMat, claheB);
-                    saveBitmapImage(claheB,path+"/"+fileNameWithoutExtension+"-CLAHE.jpg");
-                }
+                }//LAPLACIAN
+                if(isOne(arr,10)){
+                    Bitmap hdrB = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+                    hdrB = applyHDREdit(bitmap,mat,width,height,0);
+                    saveBitmapImage(hdrB,path+"/"+fileNameWithoutExtension+"-HDR.jpg");
+                }//HDR EFFECT
+                load.setVisibility(View.INVISIBLE);
                 Toast.makeText(this,"Images Saved.",Toast.LENGTH_SHORT).show();
                 finish();
             }
-
         });
 
         findViewById(R.id.closeIntent).setOnClickListener(v -> {
@@ -238,20 +246,107 @@ public class ImageProcess extends AppCompatActivity {
         });
     }
 
-    public Mat applyCLAHE(Mat inputImage) {
+    private boolean isOne(int[] arr, int pos) {
+        if (arr[pos]==1)
+            return true;
+        else
+            return false;
+    }
+    public boolean isAllZero(int[] array) {
+        for (int item : array) {
+            if (item != 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+    private Mat sharpening(Mat mat,float val) {
+
+        float alpha = (2*val + 1)/2;
+        float beta = 1-alpha;
+        Mat gaussMat = new Mat();
+        Mat sharped = new Mat();
+        Imgproc.GaussianBlur(mat, gaussMat, new org.opencv.core.Size(7,7), 0);
+        Core.addWeighted(mat,alpha,gaussMat,beta,0,sharped);
+        return sharped;
+    }
+    public Mat applyCLAHE(Mat inputImage,float val) {
         Mat labImage = new Mat();
         Imgproc.cvtColor(inputImage, labImage, Imgproc.COLOR_BGR2Lab);
 
         ArrayList<Mat> labPlanes = new ArrayList<>();
         Core.split(labImage, labPlanes);
         CLAHE clahe = Imgproc.createCLAHE();
-        clahe.setClipLimit(2.0);
+        clahe.setClipLimit(val); //Contrast Limited
         Mat lChannel = labPlanes.get(0);
-        clahe.apply(lChannel, lChannel);
+        clahe.apply(lChannel, lChannel); // Only apply on L channel.
         Core.merge(labPlanes, labImage);
         Mat outputImage = new Mat();
         Imgproc.cvtColor(labImage, outputImage, Imgproc.COLOR_Lab2BGR);
         return outputImage;
+    }
+    private Bitmap applyHDREdit(Bitmap bitmap, Mat mat, int w, int h, float val) {
+        Bitmap res= Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+        //sharpen(0.2-0.4) ; clahe(1-4) ; saturation(1-1.5)
+        float sh = 0.3F;
+        float cl = 3;
+        float st = 1.3F;
+//        Mat e = applyCLAHE(sharpening(mat, 0.5F),3);
+        Mat e = sharpening(applyCLAHE(mat,cl), sh);
+
+        Utils.matToBitmap(e, res);
+        res = func(res,w,h, st,11);
+        return res;
+    }
+    public Bitmap func(Bitmap bitmap,int width,int height,float val,int ch){
+        Bitmap res = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                int pixel = bitmap.getPixel(x, y);
+                int red = Color.red(pixel);
+                int green = Color.green(pixel);
+                int blue = Color.blue(pixel);
+                int gray = (int) (0.2989 * red + 0.5870 * green + 0.1140 * blue);
+
+                if(ch==2){ //Negative BW
+                    res.setPixel(x, y, Color.rgb((int)(255 - gray*val), (int)(255 - gray*val), (int)(255 - gray*val)));
+                }
+                else if(ch==3){ //Negative Color
+                    res.setPixel(x, y, Color.rgb((int)(255-red*val), (int)(255-green*val), (int)(255-blue*val)));
+
+                }
+                //hsv[0] => hue ; hsv[1] => saturation ; hue[2] => value
+                else if(ch==10){ //Hue
+                    float[] hsv = new float[3];
+                    Color.RGBToHSV(red, green, blue, hsv);
+                    float hue = hsv[0];
+                    hue*=val;
+                    hsv[0] = hue;
+                    int color = Color.HSVToColor(hsv);
+                    res.setPixel(x, y, Color.rgb(Color.red(color), Color.green(color), Color.blue(color)));
+                }
+                else if(ch==11){ //Saturation
+                    float[] hsv = new float[3];
+                    Color.RGBToHSV(red, green, blue, hsv);
+                    float saturation = hsv[1];
+                    saturation*=val;
+                    hsv[1] = saturation;
+                    int color = Color.HSVToColor(hsv);
+                    res.setPixel(x, y, Color.rgb(Color.red(color), Color.green(color), Color.blue(color)));
+                }
+
+                else if(ch==12){ //Brightness
+                    float[] hsv = new float[3];
+                    Color.RGBToHSV(red, green, blue, hsv);
+                    float value = hsv[2];
+                    value*=val;
+                    hsv[2] = value;
+                    int color = Color.HSVToColor(hsv);
+                    res.setPixel(x, y, Color.rgb(Color.red(color), Color.green(color), Color.blue(color)));
+                }
+            }
+        }
+        return res;
     }
     private void saveBitmapImage(Bitmap bitmap,String path) {
         OutputStream fos;
