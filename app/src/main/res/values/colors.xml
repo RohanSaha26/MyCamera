@@ -8,4 +8,9 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="blue">#3F51B5</color>
+    <color name="darkBlue">#002244</color>
+    <color name="materialColor1">@color/material_dynamic_primary30</color>
+    <color name="materialColor2">@color/material_dynamic_secondary30</color>
+    <color name="materialColor3">@color/material_dynamic_tertiary10</color>
+
 </resources>
