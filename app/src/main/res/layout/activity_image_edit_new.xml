@@ -51,6 +51,7 @@
         android:layout_width="231dp"
         android:layout_height="46dp"
         android:layout_marginLeft="10dp"
+        android:textAlignment="center"
         android:background="@drawable/bg_rounded"
         app:layout_constraintBottom_toTopOf="@+id/img1"
         app:layout_constraintEnd_toStartOf="@+id/applyAlgo"
