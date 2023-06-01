@@ -7,11 +7,19 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.BitmapShader;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
+import android.graphics.LinearGradient;
 import android.graphics.Paint;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
+import android.graphics.RadialGradient;
+import android.graphics.Rect;
+import android.graphics.RectF;
+import android.graphics.Shader;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -31,8 +39,11 @@ import org.opencv.android.Utils;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfFloat;
+import org.opencv.core.MatOfInt;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
+import org.opencv.core.Size;
 import org.opencv.imgproc.CLAHE;
 import org.opencv.imgproc.Imgproc;
 
@@ -41,6 +52,8 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 //import com.marvinlabs.widget.floatinglabel.color.ColorCMYK;
 
 
@@ -51,8 +64,8 @@ public class ImageEdit extends AppCompatActivity {
 //    ImageView resultImg;
     ImageView sourceImg;
     TextView seekVal,nameImg;
-    //                      0/.        1/       2/.              3/.             4/.        5/.       6        7/.          8/.          9/.       10/.     11/.          12/.            13/.       14/.        15/.
-    String[] algoList = {"Original","BW","Negative BW", "Negative Color","Sharpening","Water Art","Retinex","CLAHE","Gaussian Blur","Median Blur","Hue","Saturation","Brightness","HDR Effect","Warm Tone","Cool Tone","Cyan","Magenta","Yellow","Black"};
+    //                      0/.        1/       2/.              3/.             4/.        5/.       6/.        7/.          8/.          9/.       10/.     11/.          12/.            13/.       14/.        15/.
+    String[] algoList = {"Original","BW","Negative BW", "Negative Color","Sharpening","Water Art","Vignette","CLAHE","Gaussian Blur","Median Blur","Hue","Saturation","Brightness","HDR Effect","Warm Tone","Cool Tone","Cyan","Magenta","Yellow","Black"};
     Bitmap resultBitmap;
     int choice,seekBarValue,changeStatus=0;
     @Override
@@ -88,7 +101,7 @@ public class ImageEdit extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 choice = position;
-                if (position==13||position==14||position==15||position==9||position==8||position==7||position==4||position==1||position==2){
+                if (position==13||position==14||position==15||position==9||position==8||position==7||position==4||position==1||position==2||position==6){
                     seekBar.setProgress(0);
                     seekBarValue = 0;
                 }
@@ -154,9 +167,10 @@ public class ImageEdit extends AppCompatActivity {
                 case 5: //WATER ART
                     resultBitmap = applyWaterArt(bitmap,mat,width,height,seekBarValue);
                     break;
-                case 6: //RETINEX
-                    Toast.makeText(this,"Retinex Coming soon..", LENGTH_SHORT).show();
-                    resultBitmap = bitmap;
+                case 6: //VIGNETTE
+                    float valVignette = seekScalling(seekBarValue,0,100,1200,500);
+                    resultBitmap = applyVignette(bitmap,valVignette);//1- small(full black) //1400-original(no change)
+
                     break;
                 case 7: //CLAHE
                     float valClip = seekScalling(seekBarValue,0,100,1,20);
@@ -248,33 +262,37 @@ public class ImageEdit extends AppCompatActivity {
     }
 
 
-//    private Bitmap applyVignette(Bitmap bitmap, Mat mat, int w, int h, int seekBarValue) {
-//        //work in progress..
-//        int vignetteRadius = (int)seekScalling(seekBarValue,0,100,0,1);
-//
-//        int r = mat.rows();
-//        int c = mat.cols();
-//        // Generating vignette mask using Gaussian kernels
-//        Mat kernelX = Imgproc.getGaussianKernel(c, 200, CvType.CV_32F);
-//        Mat kernelY = Imgproc.getGaussianKernel(r, 200, CvType.CV_32F);
-//        Core.transpose(kernelX, kernelX);
-//        Mat kernel = kernelY.mul(kernelX);
-//        Core.divide(kernel, new Scalar(Core.norm(kernel)), kernel);
-//        Mat mask = new Mat();
-//        Core.multiply(kernel, new Scalar(255), mask);
-//        // Create the output image
-//        Mat output = new Mat();
-//        // Apply the mask to each channel in the output image
-//        for (int i = 0; i < 3; i++) {
-//            Mat channel = new Mat();
-//            Core.multiply(mat, mask, channel);
-//            output.push_back(channel);
-//        }
-//        Bitmap vignette = Bitmap.createBitmap(w,h, Bitmap.Config.ARGB_8888);
-//        Utils.matToBitmap(mat, vignette);
-//        return  vignette;
-//    }
+    public static Bitmap applyVignette(Bitmap bitmap, float radius) {
+        // Create a new bitmap with the same dimensions as the original
+        Bitmap output = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Bitmap.Config.ARGB_8888);
 
+        // Create a canvas to draw on the new bitmap
+        Canvas canvas = new Canvas(output);
+
+        // Create a paint object
+        Paint paint = new Paint();
+        paint.setAntiAlias(true);
+
+        // Set up a radial gradient shader
+        RadialGradient gradient = new RadialGradient(
+                bitmap.getWidth() / 2f, // Center X
+                bitmap.getHeight() / 2f, // Center Y
+                radius, // Radius
+                new int[] {0x00000000, 0xFF000000}, // Colors (transparent to black)
+                new float[] {0.8f, 1.0f}, // Color positions
+                Shader.TileMode.CLAMP // Shader tiling mode
+        );
+
+        // Set the shader on the paint object
+        paint.setShader(new BitmapShader(bitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP));
+
+        // Apply the vignette effect by drawing the bitmap with the radial gradient shader
+        canvas.drawBitmap(bitmap, 0, 0, paint);
+        paint.setShader(gradient);
+        canvas.drawRect(0, 0, bitmap.getWidth(), bitmap.getHeight(), paint);
+
+        return output;
+    }
     private Bitmap applyCYMK(Bitmap bitmap,int width, int height, int seekBarValue,int CYMKchoice){
         Bitmap res = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         int[] pixels = new int[width * height];
@@ -377,6 +395,7 @@ public class ImageEdit extends AppCompatActivity {
         return outputImage;
     }
 
+
     public Bitmap func(Bitmap bitmap,int width,int height,float val,int ch){
         Bitmap res = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         for (int y = 0; y < height; y++) {
@@ -461,6 +480,74 @@ public class ImageEdit extends AppCompatActivity {
         return resultBitmap;
     }
 
+//    public static Mat singleScaleRetinex(Mat img, double variance) {
+//        Log.d("RETI","singleScaleRetinex");
+//        Mat retinex = new Mat();
+//        Mat blurredImg = new Mat();
+//        Imgproc.GaussianBlur(img, blurredImg, new Size(0, 0), variance);
+//        Log.d("RETI","singleScaleRetinex--2");
+//        Mat logImg = new Mat();
+//        Mat logBlurredImg = new Mat();
+//        Core.log(img, logImg);
+//        Log.d("RETI","singleScaleRetinex--3");
+//        Core.log(blurredImg, logBlurredImg);
+//        Log.d("RETI","singleScaleRetinex--4");
+//        Mat diff = new Mat();
+//        Core.absdiff(logImg, logBlurredImg, diff);
+//        Log.d("RETI","singleScaleRetinex--5");
+//
+//        Core.subtract(diff, new Scalar(0), retinex);
+//        Log.d("RETI","singleScaleRetinex--end");
+//
+//        return retinex;
+//    }
+//    public static Mat SSR(Mat img, double variance) {
+//        Log.d("RETI","SSR");
+//        img.convertTo(img, CvType.CV_64F, 1.0);
+//        Mat img_retinex = singleScaleRetinex(img, variance);
+////        Mat img_retinex = img;
+//        List<Mat> channels = new ArrayList<>();
+//        Core.split(img_retinex, channels);
+//
+//        for (Mat channel : channels) {
+//            MatOfInt hist = new MatOfInt();
+//            MatOfInt histCount = new MatOfInt();
+//            Imgproc.calcHist(Collections.singletonList(channel), new MatOfInt(0), new Mat(), hist, new MatOfInt(256), new MatOfFloat(0, 256));
+//
+//            int zeroCount = 0;
+//            float[] histData = new float[(int) (hist.total() * hist.channels())];
+//            hist.get(0, 0, histData);
+//
+//            for (int i = 0; i < histData.length; i++) {
+//                if (histData[i] == 0) {
+//                    zeroCount++;
+//                }
+//            }
+//
+//            float lowVal = 0;
+//            float highVal = 1;
+//
+//            for (int i = 0; i < histData.length; i++) {
+//                if (histData[i] < zeroCount * 0.1) {
+//                    lowVal = i / 100.0f;
+//                }
+//
+//                if (histData[i] < zeroCount * 0.1) {
+//                    highVal = i / 100.0f;
+//                    break;
+//                }
+//            }
+//
+//            Core.subtract(channel, new Scalar(lowVal), channel);
+//            Core.divide(channel, new Scalar(highVal - lowVal), channel);
+//            Core.multiply(channel, new Scalar(255), channel);
+//        }
+//
+//        Core.merge(channels, img_retinex);
+//        img_retinex.convertTo(img_retinex, CvType.CV_8U);
+//        Log.d("RETI","SSR--end");
+//        return img_retinex;
+//    }
     private void saveBitmapImage(Bitmap bitmap,String path) {
         OutputStream fos;
         try {
