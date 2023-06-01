@@ -213,16 +213,20 @@ public class ImageEdit extends AppCompatActivity {
                     resultBitmap = applyTone(bitmap,toneCool,15);
                     break;
                 case 16:
-                    resultBitmap = applyCYMK(bitmap,width,height,seekBarValue,1);
+                    float cVal = seekScalling(seekBarValue,0,100,2,0);
+                    resultBitmap = applyCYMK(bitmap,width,height,cVal,1);
                     break;
                 case 17:
-                    resultBitmap = applyCYMK(bitmap,width,height,seekBarValue,2);
+                    float mVal = seekScalling(seekBarValue,0,100,2,0);
+                    resultBitmap = applyCYMK(bitmap,width,height,mVal,2);
                     break;
                 case 18:
-                    resultBitmap = applyCYMK(bitmap,width,height,seekBarValue,3);
+                    float kVal = seekScalling(seekBarValue,0,100,2,0);
+                    resultBitmap = applyCYMK(bitmap,width,height,kVal,3);
                     break;
                 case 19:
-                    resultBitmap = applyCYMK(bitmap,width,height,seekBarValue,4);
+                    float bVal = seekScalling(seekBarValue,0,100,2,0.2F);
+                    resultBitmap = applyCYMK(bitmap,width,height,bVal,4);
                     break;
             }
 //            resultImg.setImageBitmap(resultBitmap);
@@ -293,43 +297,62 @@ public class ImageEdit extends AppCompatActivity {
 
         return output;
     }
-    private Bitmap applyCYMK(Bitmap bitmap,int width, int height, int seekBarValue,int CYMKchoice){
+    private Bitmap applyCYMK(Bitmap bitmap,int width, int height, float val,int CYMKchoice){
         Bitmap res = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         int[] pixels = new int[width * height];
         bitmap.getPixels(pixels, 0, width, 0, 0, width, height);
 
-        float val = seekScalling(seekBarValue,0,100,0.5F,2);
+//        float val = seekScalling(seekBarValue,0,100,0.5F,2);
 
         for (int i = 0; i < pixels.length; i++) {
             int pixel = pixels[i];
 
-            int cyan = 255 - Color.red(pixel);
-            int magenta = 255 - Color.green(pixel);
-            int yellow = 255 - Color.blue(pixel);
-            int black = Math.min(cyan, Math.min(magenta, yellow));
-
+            int red = Color.red(pixel);
+            int green = Color.green(pixel);
+            int blue = Color.blue(pixel);
+            int newPixel;
             // Edit the CMYK values here
-            if (CYMKchoice==1)
-                cyan *= val;
-            else if (CYMKchoice==2)
-                magenta *= val;
-            else if(CYMKchoice==3)
-                yellow*=val;
-            else if(CYMKchoice==4)
-                black*=val;
-            else
-                cyan*=1;
+//            int g = scaleV(red,0,510);
+            if (CYMKchoice==1){
 
-            int newCyan = Color.argb(255, cyan, cyan, cyan);
-            int newMagenta = Color.argb(255, magenta, magenta, magenta);
-            int newYellow = Color.argb(255, yellow, yellow, yellow);
-            int newBlack = Color.argb(255, black, black, black);
+                newPixel = Color.rgb( boundTo((int)(red*val)), green,blue);
+            }
+            else if (CYMKchoice==2){
+                newPixel = Color.rgb(red, boundTo((int)(green*val)),blue);
 
-            int newPixel = Color.argb(255, 255-newCyan, 255-newMagenta, 255-newYellow);
+            }
+            else if(CYMKchoice==3){
+                newPixel = Color.rgb(red,green , boundTo((int)(blue*val)));
+
+            }
+            else if(CYMKchoice==4){
+                newPixel = Color.rgb(boundTo((int)(red*val)),boundTo((int)(green*val)) , boundTo((int)(blue*val)));
+
+            }
+            else{
+                newPixel = Color.rgb(0, 0, 0);
+            }
+
+//            int newCyan = Color.rgb( cyan, cyan, cyan);
+//            int newMagenta = Color.rgb(magenta, magenta, magenta);
+//            int newYellow = Color.rgb(yellow, yellow, yellow);
+//            int newBlack = Color.rgb(black, black, black);
+
             res.setPixel(i % width, i / width, newPixel);
         }
         return res;
     }
+
+    private int boundTo(int value) {
+        int newVal=value;
+        if (newVal>255)
+            newVal = 255;
+        else if (newVal<0)
+            newVal = 0;
+        return newVal;
+    }
+
+
     private Bitmap applyWaterArt(Bitmap bitmap, Mat mat, int w, int h, int seekBarValue) {
         Bitmap res= Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
         int s = (int)seekScalling(seekBarValue,0,100,3,11);
@@ -413,7 +436,7 @@ public class ImageEdit extends AppCompatActivity {
                     res.setPixel(x, y, Color.rgb((int)(255-red*val), (int)(255-green*val), (int)(255-blue*val)));
 
                 }
-                //hsv[0] => hue ; hsv[1] => saturation ; hue[2] => value
+                //hsv[0] => hue ; hsv[1] => saturation ; hsv[2] => value
                 else if(ch==10){ //Hue
                     float[] hsv = new float[3];
                     Color.RGBToHSV(red, green, blue, hsv);
