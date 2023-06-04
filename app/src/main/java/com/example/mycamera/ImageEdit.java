@@ -46,6 +46,8 @@ import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.CLAHE;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.photo.MergeMertens;
+import org.opencv.photo.Photo;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -54,35 +56,31 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-//import com.marvinlabs.widget.floatinglabel.color.ColorCMYK;
-
 
 public class ImageEdit extends AppCompatActivity {
 
     Spinner spinner;
     SeekBar seekBar;
-//    ImageView resultImg;
     ImageView sourceImg;
     TextView seekVal,nameImg;
-    //                      0/.        1/       2/.              3/.             4/.        5/.       6/.        7/.          8/.          9/.       10/.     11/.          12/.            13/.       14/.        15/.
-    String[] algoList = {"Original","BW","Negative BW", "Negative Color","Sharpening","Water Art","Vignette","CLAHE","Gaussian Blur","Median Blur","Hue","Saturation","Brightness","HDR Effect","Warm Tone","Cool Tone","Cyan","Magenta","Yellow","Black"};
+    String[] algoList = {"Original","Grayscale","Negative_Grayscale",
+            "Negative_Color","Sharpening","Water_Art","Vignette",
+            "CLAHE","Gaussian_Blur","Median_Blur","Hue","Saturation",
+            "Brightness","HDR_Effect","Warm_Tone","Cool_Tone","Cyan",
+            "Magenta","Yellow","Black","Night_Enhancement"};
     Bitmap resultBitmap;
+    String imgLastName="";
     int choice,seekBarValue,changeStatus=0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_image_edit_new);
-
-//        findViewById(R.id.lottieLoad).setVisibility(View.INVISIBLE);
-        //Get Image from another intent.
         Intent intent = getIntent();
         String imagePath = intent.getStringExtra("imagePath");
         String editPath = Environment.getExternalStorageDirectory()+"/DCIM/MyCamera/MyCameraEdit";
         String fileName = imagePath.substring(imagePath.lastIndexOf("/") + 1);
         String fileNameWithoutExtension = fileName.substring(0, fileName.lastIndexOf("."));
         Bitmap bitmap = BitmapFactory.decodeFile(imagePath);
-
-        Log.d("paath",editPath);
         int width = bitmap.getWidth();
         int height = bitmap.getHeight();
         Mat mat = new Mat();
@@ -90,13 +88,10 @@ public class ImageEdit extends AppCompatActivity {
         spinner = findViewById(R.id.dropdown);
         sourceImg = (ImageView) findViewById(R.id.img1);
         nameImg = (TextView)findViewById(R.id.imgStatusName);
-//        resultImg =  (ImageView) findViewById(R.id.img2);
-
         sourceImg.setImageBitmap(bitmap);
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, algoList);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(adapter);
-
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -106,7 +101,7 @@ public class ImageEdit extends AppCompatActivity {
                     seekBarValue = 0;
                 }
 
-                else if (position==10||position==11||position==12||position==5){
+                else if (position==10||position==11||position==12||position==5||position==16||position==17||position==18||position==19){
                     seekBar.setProgress(50);
                     seekBarValue = 50;
                 }
@@ -119,10 +114,8 @@ public class ImageEdit extends AppCompatActivity {
                 resultBitmap = bitmap;
             }
         });
-
         seekBar= (SeekBar)findViewById(R.id.bar);
         seekVal = (TextView) findViewById(R.id.seekValue);
-
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -146,93 +139,121 @@ public class ImageEdit extends AppCompatActivity {
             switch (choice){
                 case 0: //ORIGINAL
                     resultBitmap = bitmap;
+                    imgLastName = algoList[0];
                     break;
                 case 1: //BW
                     Mat grayMat = new Mat();
                     Imgproc.cvtColor(mat, grayMat, Imgproc.COLOR_BGR2GRAY);
                     Utils.matToBitmap(grayMat, resultBitmap);
+                    imgLastName = algoList[1];
                     break;
                 case 2: //NEGATIVE BW
                     float inte1 = seekScalling(seekBarValue,0,100,1,2);
                     resultBitmap = func(bitmap,width,height,inte1,2);
+                    imgLastName = algoList[choice]+seekBarValue;
                     break;
                 case 3: //NEGATIVE COLOR
                     float inte2 = seekScalling(seekBarValue,0,100,1,2);
                     resultBitmap = func(bitmap,width,height,inte2,3);
+                    imgLastName = algoList[choice]+seekBarValue;
+
                     break;
                 case 4: //SHARPENING
                     float valSharp = seekScalling(seekBarValue,0,100,0,10);
                     Utils.matToBitmap(sharpening(mat,valSharp), resultBitmap);
+                    imgLastName = algoList[choice]+seekBarValue;
                     break;
                 case 5: //WATER ART
                     resultBitmap = applyWaterArt(bitmap,mat,width,height,seekBarValue);
+                    imgLastName = algoList[choice]+seekBarValue;
+
                     break;
                 case 6: //VIGNETTE
                     float valVignette = seekScalling(seekBarValue,0,100,1200,500);
                     resultBitmap = applyVignette(bitmap,valVignette);//1- small(full black) //1400-original(no change)
-
+                    imgLastName = algoList[choice]+seekBarValue;
                     break;
                 case 7: //CLAHE
                     float valClip = seekScalling(seekBarValue,0,100,1,20);
                     Mat claheMat = applyCLAHE(mat,valClip);
                     Utils.matToBitmap(claheMat, resultBitmap);
+                    imgLastName = algoList[choice]+seekBarValue;
+
                     break;
                 case 8: //GAUSSIAN BLUR
                     Mat gauss = new Mat();
                     int s = 2*seekBarValue + 1;//odd(2n+1)
                     Imgproc.GaussianBlur(mat, gauss, new org.opencv.core.Size(s,s), 0);
                     Utils.matToBitmap(gauss, resultBitmap);
+                    imgLastName = algoList[choice]+seekBarValue;
                     break;
                 case 9: //MEDIAN BLUR
                     Mat blur  = new Mat();
                     int k = 2*seekBarValue + 1;//odd(2n+1)
                     Imgproc.medianBlur(mat,blur,k);
                     Utils.matToBitmap(blur, resultBitmap);
+                    imgLastName = algoList[choice]+seekBarValue;
                     break;
                 case 10: //HUE
                     float valH = seekScalling(seekBarValue,0,100,0,2);
                     resultBitmap = func(bitmap,width,height,valH,10);
+                    imgLastName = algoList[choice]+seekBarValue;
                     break;
                 case 11: //SATURATION
                     float valS = seekScalling(seekBarValue,0,100,0,2);
                     resultBitmap = func(bitmap,width,height,valS,11);
+                    imgLastName = algoList[choice]+seekBarValue;
                     break;
                 case 12: //BRIGHTNESS
                     float valV = seekScalling(seekBarValue,0,100,0.2F,2);
                     resultBitmap = func(bitmap,width,height,valV,12);
+                    imgLastName = algoList[choice]+seekBarValue;
                     break;
                 case 13: //HDR Effect
                     resultBitmap = applyHDREdit(bitmap,mat,width,height,seekBarValue);
+                    imgLastName = algoList[choice]+seekBarValue;
                     break;
                 case 14: //WARM TONE
                     float toneWarm = seekScalling(seekBarValue,0,100,0,1);
                     resultBitmap = applyTone(bitmap,toneWarm,14);
+                    imgLastName = algoList[choice]+seekBarValue;
                     break;
                 case 15: //COOL TONE
                     float toneCool = seekScalling(seekBarValue,0,100,0,1);
                     resultBitmap = applyTone(bitmap,toneCool,15);
+                    imgLastName = algoList[choice]+seekBarValue;
                     break;
-                case 16:
+                case 16://CYAN
                     float cVal = seekScalling(seekBarValue,0,100,2,0);
                     resultBitmap = applyCYMK(bitmap,width,height,cVal,1);
+                    imgLastName = algoList[choice]+seekBarValue;
                     break;
-                case 17:
+                case 17://MAGENTA
                     float mVal = seekScalling(seekBarValue,0,100,2,0);
                     resultBitmap = applyCYMK(bitmap,width,height,mVal,2);
+                    imgLastName = algoList[choice]+seekBarValue;
                     break;
-                case 18:
+                case 18://YELLOW
                     float kVal = seekScalling(seekBarValue,0,100,2,0);
                     resultBitmap = applyCYMK(bitmap,width,height,kVal,3);
+                    imgLastName = algoList[choice]+seekBarValue;
                     break;
-                case 19:
+                case 19://BLCK
                     float bVal = seekScalling(seekBarValue,0,100,2,0.2F);
                     resultBitmap = applyCYMK(bitmap,width,height,bVal,4);
+                    imgLastName = algoList[choice]+seekBarValue;
                     break;
+                case 20://NIGHT ENHANCEMENT
+                    resultBitmap = enhanceNightImage(bitmap,seekBarValue);
+                    imgLastName = algoList[choice]+seekBarValue;
+                    break;
+
             }
 //            resultImg.setImageBitmap(resultBitmap);
             sourceImg.setImageBitmap(resultBitmap);
             changeStatus = 1;
-            nameImg.setText(""+algoList[choice]+"-"+seekBarValue);
+            if (choice!=0)
+                nameImg.setText(""+algoList[choice]+"-"+seekBarValue);
             findViewById(R.id.lottieLoad).setVisibility(View.INVISIBLE);
         });
         findViewById(R.id.save).setOnClickListener(v -> {
@@ -241,8 +262,18 @@ public class ImageEdit extends AppCompatActivity {
             if (!folder.exists()) {
                 folder.mkdir();
             }
-            saveBitmapImage(resultBitmap,editPath+"/"+fileNameWithoutExtension+"-edited.jpg");
-            Toast.makeText(this,"Image Saved Successfully.", LENGTH_SHORT).show();
+            if (imgLastName.equals("")||imgLastName.equals("Original")){
+//                saveBitmapImage(bitmap,editPath+"/"+fileNameWithoutExtension+"-"+imgLastName+".jpg");
+                Toast.makeText(this,"Original image already exist.", LENGTH_SHORT).show();
+            }
+            else
+            {
+                saveBitmapImage(resultBitmap,editPath+"/"+fileNameWithoutExtension+"-"+imgLastName+".jpg");
+                Toast.makeText(this,"Image Saved.", LENGTH_SHORT).show();
+            }
+
+
+
         });
         findViewById(R.id.change).setOnClickListener(v -> {
             if (resultBitmap!=null){
@@ -264,20 +295,12 @@ public class ImageEdit extends AppCompatActivity {
             }
         });
     }
-
-
+    //---------------------------ALGORITHMS------------------------------
     public static Bitmap applyVignette(Bitmap bitmap, float radius) {
-        // Create a new bitmap with the same dimensions as the original
         Bitmap output = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Bitmap.Config.ARGB_8888);
-
-        // Create a canvas to draw on the new bitmap
         Canvas canvas = new Canvas(output);
-
-        // Create a paint object
         Paint paint = new Paint();
         paint.setAntiAlias(true);
-
-        // Set up a radial gradient shader
         RadialGradient gradient = new RadialGradient(
                 bitmap.getWidth() / 2f, // Center X
                 bitmap.getHeight() / 2f, // Center Y
@@ -286,23 +309,16 @@ public class ImageEdit extends AppCompatActivity {
                 new float[] {0.8f, 1.0f}, // Color positions
                 Shader.TileMode.CLAMP // Shader tiling mode
         );
-
-        // Set the shader on the paint object
         paint.setShader(new BitmapShader(bitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP));
-
-        // Apply the vignette effect by drawing the bitmap with the radial gradient shader
         canvas.drawBitmap(bitmap, 0, 0, paint);
         paint.setShader(gradient);
         canvas.drawRect(0, 0, bitmap.getWidth(), bitmap.getHeight(), paint);
-
         return output;
     }
     private Bitmap applyCYMK(Bitmap bitmap,int width, int height, float val,int CYMKchoice){
         Bitmap res = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         int[] pixels = new int[width * height];
         bitmap.getPixels(pixels, 0, width, 0, 0, width, height);
-
-//        float val = seekScalling(seekBarValue,0,100,0.5F,2);
 
         for (int i = 0; i < pixels.length; i++) {
             int pixel = pixels[i];
@@ -311,8 +327,6 @@ public class ImageEdit extends AppCompatActivity {
             int green = Color.green(pixel);
             int blue = Color.blue(pixel);
             int newPixel;
-            // Edit the CMYK values here
-//            int g = scaleV(red,0,510);
             if (CYMKchoice==1){
 
                 newPixel = Color.rgb( boundTo((int)(red*val)), green,blue);
@@ -333,26 +347,10 @@ public class ImageEdit extends AppCompatActivity {
                 newPixel = Color.rgb(0, 0, 0);
             }
 
-//            int newCyan = Color.rgb( cyan, cyan, cyan);
-//            int newMagenta = Color.rgb(magenta, magenta, magenta);
-//            int newYellow = Color.rgb(yellow, yellow, yellow);
-//            int newBlack = Color.rgb(black, black, black);
-
             res.setPixel(i % width, i / width, newPixel);
         }
         return res;
     }
-
-    private int boundTo(int value) {
-        int newVal=value;
-        if (newVal>255)
-            newVal = 255;
-        else if (newVal<0)
-            newVal = 0;
-        return newVal;
-    }
-
-
     private Bitmap applyWaterArt(Bitmap bitmap, Mat mat, int w, int h, int seekBarValue) {
         Bitmap res= Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
         int s = (int)seekScalling(seekBarValue,0,100,3,11);
@@ -372,7 +370,6 @@ public class ImageEdit extends AppCompatActivity {
         Utils.matToBitmap(sharped, res);
         return res;
     }
-
     private Bitmap applyHDREdit(Bitmap bitmap, Mat mat, int w, int h, float val) {
         Bitmap res= Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
         //sharpen(0.2-0.4) ; clahe(1-4) ; saturation(1-1.5)
@@ -381,12 +378,11 @@ public class ImageEdit extends AppCompatActivity {
         float st = seekScalling(val,0,100,1,1.5F);
 //        Mat e = applyCLAHE(sharpening(mat, 0.5F),3);
         Mat e = sharpening(applyCLAHE(mat,cl), sh);
-
+//1. CLAHE with range(1-4); 2. Sharpening with range(0.2-0.4);3. Saturation with range(1-1.5)
         Utils.matToBitmap(e, res);
-        res = func(res,w,h, st,11);
+        res = func(res,w,h, st,11);//saturation
         return res;
     }
-
     private Mat sharpening(Mat mat,float val) {
 
         float alpha = (2*val + 1)/2;
@@ -397,11 +393,6 @@ public class ImageEdit extends AppCompatActivity {
         Core.addWeighted(mat,alpha,gaussMat,beta,0,sharped);
         return sharped;
     }
-
-    private float seekScalling(float seekBarValue, float inpMin, float inpMax, float outMin, float outMax) {
-        return ((seekBarValue - inpMin) / (inpMax - inpMin)) * (outMax - outMin) + outMin;
-    }
-
     public Mat applyCLAHE(Mat inputImage,float val) {
         Mat labImage = new Mat();
         Imgproc.cvtColor(inputImage, labImage, Imgproc.COLOR_BGR2Lab);
@@ -417,8 +408,31 @@ public class ImageEdit extends AppCompatActivity {
         Imgproc.cvtColor(labImage, outputImage, Imgproc.COLOR_Lab2BGR);
         return outputImage;
     }
+    public Bitmap enhanceNightImage(Bitmap inputBitmap,int seekBarValue) {
+        float val = seekScalling(seekBarValue,0,100,1,5);
+        float valSharp = seekScalling(seekBarValue,0,100,1,10);
+        Mat inputMat = new Mat();
+        Utils.bitmapToMat(inputBitmap, inputMat);
+        Mat outputMat = new Mat();
+        List<Mat> channels = new ArrayList<>();
+        Core.split(inputMat, channels);
+        for (Mat channel : channels) {
+            Core.multiply(channel, new Scalar(val), channel);//1-5
+        }
+        Core.merge(channels, outputMat);
+        Bitmap outputBitmap = Bitmap.createBitmap(outputMat.cols(), outputMat.rows(), Bitmap.Config.ARGB_8888);
 
-
+        Mat resultImage = new Mat();
+        Core.addWeighted(inputMat, 0.5, outputMat, 0.5, 0, resultImage);
+        Mat gaussMat = new Mat();
+        Mat sharped = new Mat();
+        float alpha = (2*valSharp + 1)/2;
+        float beta = 1-alpha;
+        Imgproc.GaussianBlur(resultImage, gaussMat, new org.opencv.core.Size(7,7), 0);
+        Core.addWeighted(resultImage,alpha,gaussMat,beta,0,sharped);
+        Utils.matToBitmap(sharped, outputBitmap);
+        return outputBitmap;
+    }
     public Bitmap func(Bitmap bitmap,int width,int height,float val,int ch){
         Bitmap res = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         for (int y = 0; y < height; y++) {
@@ -434,7 +448,6 @@ public class ImageEdit extends AppCompatActivity {
                 }
                 else if(ch==3){ //Negative Color
                     res.setPixel(x, y, Color.rgb((int)(255-red*val), (int)(255-green*val), (int)(255-blue*val)));
-
                 }
                 //hsv[0] => hue ; hsv[1] => saturation ; hsv[2] => value
                 else if(ch==10){ //Hue
@@ -469,7 +482,6 @@ public class ImageEdit extends AppCompatActivity {
         }
         return res;
     }
-
     private Bitmap applyTone(Bitmap bitmap, float toneLevel,int t) {
         Bitmap resultBitmap = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), bitmap.getConfig());
         Canvas canvas = new Canvas(resultBitmap);
@@ -502,75 +514,17 @@ public class ImageEdit extends AppCompatActivity {
 
         return resultBitmap;
     }
-
-//    public static Mat singleScaleRetinex(Mat img, double variance) {
-//        Log.d("RETI","singleScaleRetinex");
-//        Mat retinex = new Mat();
-//        Mat blurredImg = new Mat();
-//        Imgproc.GaussianBlur(img, blurredImg, new Size(0, 0), variance);
-//        Log.d("RETI","singleScaleRetinex--2");
-//        Mat logImg = new Mat();
-//        Mat logBlurredImg = new Mat();
-//        Core.log(img, logImg);
-//        Log.d("RETI","singleScaleRetinex--3");
-//        Core.log(blurredImg, logBlurredImg);
-//        Log.d("RETI","singleScaleRetinex--4");
-//        Mat diff = new Mat();
-//        Core.absdiff(logImg, logBlurredImg, diff);
-//        Log.d("RETI","singleScaleRetinex--5");
-//
-//        Core.subtract(diff, new Scalar(0), retinex);
-//        Log.d("RETI","singleScaleRetinex--end");
-//
-//        return retinex;
-//    }
-//    public static Mat SSR(Mat img, double variance) {
-//        Log.d("RETI","SSR");
-//        img.convertTo(img, CvType.CV_64F, 1.0);
-//        Mat img_retinex = singleScaleRetinex(img, variance);
-////        Mat img_retinex = img;
-//        List<Mat> channels = new ArrayList<>();
-//        Core.split(img_retinex, channels);
-//
-//        for (Mat channel : channels) {
-//            MatOfInt hist = new MatOfInt();
-//            MatOfInt histCount = new MatOfInt();
-//            Imgproc.calcHist(Collections.singletonList(channel), new MatOfInt(0), new Mat(), hist, new MatOfInt(256), new MatOfFloat(0, 256));
-//
-//            int zeroCount = 0;
-//            float[] histData = new float[(int) (hist.total() * hist.channels())];
-//            hist.get(0, 0, histData);
-//
-//            for (int i = 0; i < histData.length; i++) {
-//                if (histData[i] == 0) {
-//                    zeroCount++;
-//                }
-//            }
-//
-//            float lowVal = 0;
-//            float highVal = 1;
-//
-//            for (int i = 0; i < histData.length; i++) {
-//                if (histData[i] < zeroCount * 0.1) {
-//                    lowVal = i / 100.0f;
-//                }
-//
-//                if (histData[i] < zeroCount * 0.1) {
-//                    highVal = i / 100.0f;
-//                    break;
-//                }
-//            }
-//
-//            Core.subtract(channel, new Scalar(lowVal), channel);
-//            Core.divide(channel, new Scalar(highVal - lowVal), channel);
-//            Core.multiply(channel, new Scalar(255), channel);
-//        }
-//
-//        Core.merge(channels, img_retinex);
-//        img_retinex.convertTo(img_retinex, CvType.CV_8U);
-//        Log.d("RETI","SSR--end");
-//        return img_retinex;
-//    }
+    private int boundTo(int value) {
+        int newVal=value;
+        if (newVal>255)
+            newVal = 255;
+        else if (newVal<0)
+            newVal = 0;
+        return newVal;
+    }
+    private float seekScalling(float seekBarValue, float inpMin, float inpMax, float outMin, float outMax) {
+        return ((seekBarValue - inpMin) / (inpMax - inpMin)) * (outMax - outMin) + outMin;
+    }
     private void saveBitmapImage(Bitmap bitmap,String path) {
         OutputStream fos;
         try {
@@ -584,5 +538,4 @@ public class ImageEdit extends AppCompatActivity {
             ex.printStackTrace();
         }
     }
-
 }

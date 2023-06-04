@@ -58,8 +58,8 @@ public class ImageProcess extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_image_process_new);
-        LottieAnimationView load = (LottieAnimationView) findViewById(R.id.progressBar);
-        load.setVisibility(View.INVISIBLE);
+        LottieAnimationView load = (LottieAnimationView) findViewById(R.id.lottieLoad1);
+
         Intent intent = getIntent();
         String pathF = intent.getStringExtra("rootPath");
         String imagePath = intent.getStringExtra("imagePath");
@@ -97,14 +97,17 @@ public class ImageProcess extends AppCompatActivity {
         });
 
         findViewById(R.id.saveImg).setOnClickListener(v -> {
-            load.setVisibility(View.VISIBLE);
             int[] arr = checkListAdapter.getSelectedItemsArray();
             Log.d("CheckListArray", Arrays.toString(arr));
 
             if (isAllZero(arr)) {
                 Toast.makeText(this,"Select any checkbox to save.",Toast.LENGTH_SHORT).show();
+//                findViewById(R.id.lottieLoad1).setVisibility(View.GONE);
+
             }
             else {
+                Toast.makeText(this,"Please wait...",Toast.LENGTH_LONG).show();
+                findViewById(R.id.lottieLoad1).setVisibility(View.VISIBLE);
                 File folder = new File(path);
                 if (!folder.exists()) {
                     folder.mkdir();
@@ -191,7 +194,7 @@ public class ImageProcess extends AppCompatActivity {
                     hdrB = applyHDREdit(bitmap,mat,width,height,0);
                     saveBitmapImage(hdrB,path+"/"+fileNameWithoutExtension+"-HDR.jpg");
                 }//HDR EFFECT
-                load.setVisibility(View.INVISIBLE);
+                findViewById(R.id.lottieLoad1).setVisibility(View.GONE);
                 Toast.makeText(this,"Images Saved.",Toast.LENGTH_SHORT).show();
                 finish();
             }
