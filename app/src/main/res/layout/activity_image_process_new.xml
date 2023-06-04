@@ -107,10 +107,10 @@
         app:layout_constraintVertical_bias="1.0" />
 
     <com.airbnb.lottie.LottieAnimationView
-        android:id="@+id/progressBar"
+        android:id="@+id/lottieLoad1"
         android:layout_width="70dp"
         android:layout_height="70dp"
-        android:visibility="visible"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@+id/checkList"
         app:layout_constraintEnd_toEndOf="@+id/checkList"
         app:layout_constraintHorizontal_bias="0.498"
