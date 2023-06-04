@@ -96,12 +96,16 @@ public class ImageEdit extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 choice = position;
-                if (position==13||position==14||position==15||position==9||position==8||position==7||position==4||position==1||position==2||position==6){
+                if (position==13||position==14||position==15||position==9||
+                        position==8||position==7||position==4||position==1||
+                        position==2||position==6||position==20){
                     seekBar.setProgress(0);
                     seekBarValue = 0;
                 }
 
-                else if (position==10||position==11||position==12||position==5||position==16||position==17||position==18||position==19){
+                else if (position==10||position==11||position==12||
+                        position==5||position==16||position==17||
+                        position==18||position==19){
                     seekBar.setProgress(50);
                     seekBarValue = 50;
                 }

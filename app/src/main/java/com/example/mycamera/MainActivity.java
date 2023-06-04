@@ -119,7 +119,6 @@ public class MainActivity extends AppCompatActivity {
     CameraCharacteristics characteristics;
     CameraManager manager;
     private android.util.Size imageDimension;
-    //Save to FILE
     private File file;
     private static final int REQUEST_CAMERA_PERMISSION = 200;
     private Handler mBackgroundHandler;
@@ -127,9 +126,7 @@ public class MainActivity extends AppCompatActivity {
 
     String pathF = Environment.getExternalStorageDirectory()+"/DCIM/MyCamera";
     String imagePath;
-    private int isoVal;
-    private float focusVal;
-    public Bitmap bitmap,bitmap1;
+    public Bitmap bitmap;
     boolean flashStatus=false;
     int camFlip; //1 - back , 0 - front
 
@@ -179,7 +176,6 @@ public class MainActivity extends AppCompatActivity {
                 flash.setImageResource(R.drawable.flash_on);
             }
         });
-
         findViewById(R.id.rawOn).setOnClickListener(v -> {
             Intent rowModeON;
             rowModeON  = new Intent(MainActivity.this,PROActivity.class);
@@ -187,7 +183,6 @@ public class MainActivity extends AppCompatActivity {
             overridePendingTransition(R.anim.flip_in, R.anim.flip_out);
             finish();
         });
-//        camFlip = 1;
         cameraChangeBtn.setOnClickListener(v -> {
             Intent camChange;
             if(camFlip == 1)
@@ -201,12 +196,10 @@ public class MainActivity extends AppCompatActivity {
 
         });
         camFlip = getIntent().getIntExtra("flip",1);
-
         galleryBtn.setOnClickListener(v -> {
             Intent gallery = new Intent(MainActivity.this,GalleryActivity.class).putExtra("rootPath",pathF+"/");
             startActivity(gallery);
         });
-
         if (!OpenCVLoader.initDebug()) {
             Log.e("OpenCV", "Unable to load OpenCV");
         } else {
@@ -237,9 +230,6 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
     }
-
-
-    //pass raw arguments by this function
     private void takePicture() {
 
         findViewById(R.id.progressBar).setVisibility(View.VISIBLE);
@@ -365,7 +355,6 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
     }
-
     private void createCameraPreview() {
         try{
             SurfaceTexture texture = textureView.getSurfaceTexture();
@@ -393,7 +382,6 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
     }
-
     private void updatePreview() {
         if(cameraDevice == null)
             Toast.makeText(this, "Error", Toast.LENGTH_SHORT).show();
@@ -406,7 +394,6 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
     }
-
     private void openCamera(int camF) {
     CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
     try {
@@ -450,7 +437,6 @@ public class MainActivity extends AppCompatActivity {
         e.printStackTrace();
     }
 }
-
     TextureView.SurfaceTextureListener textureListener = new TextureView.SurfaceTextureListener() {
         @Override
         public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int i, int i1) {
@@ -472,7 +458,6 @@ public class MainActivity extends AppCompatActivity {
 
         }
     };
-
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -483,7 +468,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-
     @Override
     protected void onResume() {
         super.onResume();
@@ -493,13 +477,11 @@ public class MainActivity extends AppCompatActivity {
         else
             textureView.setSurfaceTextureListener(textureListener);
     }
-
     @Override
     protected void onPause() {
         stopBackgroundThread();
         super.onPause();
     }
-
     private void stopBackgroundThread() {
         mBackgroundThread.quitSafely();
         try{
@@ -510,7 +492,6 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
     }
-
     private void startBackgroundThread() {
         mBackgroundThread = new HandlerThread("Camera Background");
         mBackgroundThread.start();
